@@ -31,6 +31,7 @@ namespace TestGtk
 
 
             window = new Window ("Label sample");
+            window.Resize(400, 600);
 
             window.DeleteEvent += delete_event;
 
@@ -63,9 +64,24 @@ namespace TestGtk
                 "WorkingSet64",
                 "CPU usage"
             };
+            
+            CellRendererText render = new CellRendererText();
+            render.Alignment = Pango.Alignment.Center;
+            
             for (int i = 0; i < 4; i++)
             {
-                view.AppendColumn(columnLabels[i], new Gtk.CellRendererText(), "text", i);
+                TreeViewColumn column = new TreeViewColumn();
+                column.Clickable = true;
+                column.Resizable = true;
+                column.Title = columnLabels[i];
+                column.SortIndicator = true;
+                column.Alignment = 0.5f;
+                column.Expand = true;
+                column.PackStart(render, true);
+                column.AddAttribute(render, "text", i);
+
+                //view.AppendColumn(columnLabels[i], render, "text", i);
+                view.AppendColumn(column);
             }
             
             processesVBox.PackStart(view, false, false, 0);
@@ -89,12 +105,12 @@ namespace TestGtk
 
                     foreach (var element in list)
                     {
-                        store.AddNode(new MyTreeNode(element.ProcessName, element.Id, element.WorkingSet64, element.CpuUsage));
+                        store.AddNode(new MyTreeNode(element.ProcessName, element.Id.ToString(), element.WorkingSet64.ToString(), element.CpuUsage.ToString()));
                     }
 
                     view.NodeStore = store;
 
-                    view.ShowAll();
+                    
                     
                     /*
                     foreach (var element in processesVBox.Children)
@@ -110,7 +126,7 @@ namespace TestGtk
                     */
                     
                     window.ShowAll();
-                    
+                    view.ShowAll();
                 });
             };
 
@@ -123,6 +139,13 @@ namespace TestGtk
             };
             _timer.Start();
 */
+            for (int i = 0; i < 15; i ++)
+            {
+                store.AddNode(new MyTreeNode());
+            }
+
+            view.NodeStore = store;
+            view.ShowAll();
             window.ShowAll();
 
             //thr.Start();
@@ -205,20 +228,28 @@ namespace TestGtk
         public string ProcessName { get; set; }
         
         [TreeNodeValue(Column = 1)]
-        public double Id { get; set; }
+        public string Id { get; set; }
         
         [TreeNodeValue(Column = 2)]
-        public long WorkingSet64 { get; set; }
+        public string WorkingSet64 { get; set; }
         
         [TreeNodeValue(Column = 3)]
-        public double CpuUsage { get; set; }
+        public string CpuUsage { get; set; }
         
-        public MyTreeNode(string processName, double id, long workingSet64, double cpuUsage)
+        public MyTreeNode(string processName, string id, string workingSet64, string cpuUsage)
         {
             ProcessName = processName;
             Id = id;
             WorkingSet64 = workingSet64;
             CpuUsage = cpuUsage;
+        }
+
+        public MyTreeNode()
+        {
+            ProcessName = "";
+            Id = "";
+            WorkingSet64 = "";
+            CpuUsage = "";
         }
     }
 }
