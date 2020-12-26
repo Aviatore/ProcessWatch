@@ -7,11 +7,11 @@ namespace TestGtk
 {
     public class ProcessMod
     {
-        public string ProcessName { get; private set; }
-        public double CpuUsage { get; private set; }
-        public double Id { get; private set; }
-        public long WorkingSet64 { get; private set; }
-        public TimeSpan TotalProcessorTime { get; private set; }
+        public string ProcessName { get;  set; }
+        public double CpuUsage { get;  set; }
+        public double Id { get;  set; }
+        public long WorkingSet64 { get;  set; }
+        public TimeSpan TotalProcessorTime { get;  set; }
         
         public ProcessMod()
         {
@@ -37,6 +37,11 @@ namespace TestGtk
             for (int i = 0; i < tasks.Count; i++)
             {
                 proc.Add(tasks[i].Result);
+            }
+
+            foreach (var process in processes)
+            {
+                process.Dispose();
             }
 
             return proc.ToArray();

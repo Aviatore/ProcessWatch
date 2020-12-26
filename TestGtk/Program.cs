@@ -15,6 +15,7 @@ namespace TestGtk
         private static Timer _timer = new Timer();
         static ThreadNotify notify;
         private static Updater _updater;
+        private static NodeStore store;
         
         static void Main(string[] args)
         {
@@ -24,6 +25,7 @@ namespace TestGtk
             VBox vbox;
             Frame frame;
             Label label;
+            store = new NodeStore(typeof(MyTreeNode));
 
             Application.Init ();
 
@@ -52,6 +54,22 @@ namespace TestGtk
 
             frame = new Frame ("Processes");
             VBox processesVBox = new VBox(false, 5);
+            
+            NodeView view = new NodeView();
+            string[] columnLabels = new string[]
+            {
+                "Process name",
+                "Process Id",
+                "WorkingSet64",
+                "CPU usage"
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                view.AppendColumn(columnLabels[i], new Gtk.CellRendererText(), "text", i);
+            }
+            
+            processesVBox.PackStart(view, false, false, 0);
+
             frame.Add(processesVBox);
 
             vbox.PackStart(frame, false, false, 0);
@@ -66,6 +84,19 @@ namespace TestGtk
             {
                 Application.Invoke(delegate
                 {
+                    store = null;
+                    store = new NodeStore(typeof(MyTreeNode));
+
+                    foreach (var element in list)
+                    {
+                        store.AddNode(new MyTreeNode(element.ProcessName, element.Id, element.WorkingSet64, element.CpuUsage));
+                    }
+
+                    view.NodeStore = store;
+
+                    view.ShowAll();
+                    
+                    /*
                     foreach (var element in processesVBox.Children)
                     {
                         processesVBox.Remove(element);
@@ -76,6 +107,7 @@ namespace TestGtk
                         label = new Label(element);
                         processesVBox.PackStart(label, false, false, 0);
                     }
+                    */
                     
                     window.ShowAll();
                     
@@ -121,7 +153,7 @@ namespace TestGtk
 
     public class Updater
     {
-        public event EventHandler<List<string>> OnResult;
+        public event EventHandler<List<ProcessMod>> OnResult;
         private Timer aTimer;
         
         public Updater()
@@ -158,11 +190,35 @@ namespace TestGtk
             foreach (var process in processesSorted)
             {
                 string data =
-                    $"{process.Id}\t{process.ProcessName}\t{process.CpuUsage:0.#}%\t{ProcessMod.FormatMemSize(process.WorkingSet64)}";
+                    $"{process.Id.ToString()}\t{process.ProcessName}\t{process.CpuUsage.ToString():0.#}%\t{ProcessMod.FormatMemSize(process.WorkingSet64)}";
                 output.Add(data);
             }
             
-            OnResult?.Invoke(this, output);
+            OnResult?.Invoke(this, processesSorted.ToList());
         }   
+    }
+
+    [TreeNode(ListOnly = true)]
+    public class MyTreeNode : TreeNode
+    {
+        [TreeNodeValue(Column = 0)]
+        public string ProcessName { get; set; }
+        
+        [TreeNodeValue(Column = 1)]
+        public double Id { get; set; }
+        
+        [TreeNodeValue(Column = 2)]
+        public long WorkingSet64 { get; set; }
+        
+        [TreeNodeValue(Column = 3)]
+        public double CpuUsage { get; set; }
+        
+        public MyTreeNode(string processName, double id, long workingSet64, double cpuUsage)
+        {
+            ProcessName = processName;
+            Id = id;
+            WorkingSet64 = workingSet64;
+            CpuUsage = cpuUsage;
+        }
     }
 }
