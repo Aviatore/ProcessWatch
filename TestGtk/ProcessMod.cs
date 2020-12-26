@@ -72,6 +72,11 @@ namespace TestGtk
             
             return tmp;
         }
+
+        public static string FormatCpuUsage(double cpuUsage)
+        {
+            return $"{cpuUsage:0.#}%";
+        }
         
         public static string FormatMemSize(double size)
         {

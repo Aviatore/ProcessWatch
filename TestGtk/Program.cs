@@ -66,8 +66,8 @@ namespace TestGtk
             };
             
             CellRendererText render = new CellRendererText();
-            render.Alignment = Pango.Alignment.Center;
-            
+            render.Alignment = Pango.Alignment.Right;
+            render.Xalign = 0.5f;
             for (int i = 0; i < 4; i++)
             {
                 TreeViewColumn column = new TreeViewColumn();
@@ -79,7 +79,7 @@ namespace TestGtk
                 column.Expand = true;
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
-
+                
                 //view.AppendColumn(columnLabels[i], render, "text", i);
                 view.AppendColumn(column);
             }
@@ -105,7 +105,7 @@ namespace TestGtk
 
                     foreach (var element in list)
                     {
-                        store.AddNode(new MyTreeNode(element.ProcessName, element.Id.ToString(), element.WorkingSet64.ToString(), element.CpuUsage.ToString()));
+                        store.AddNode(new MyTreeNode(element.ProcessName, element.Id.ToString(), ProcessMod.FormatMemSize(element.WorkingSet64), ProcessMod.FormatCpuUsage(element.CpuUsage)));
                     }
 
                     view.NodeStore = store;
@@ -213,7 +213,7 @@ namespace TestGtk
             foreach (var process in processesSorted)
             {
                 string data =
-                    $"{process.Id.ToString()}\t{process.ProcessName}\t{process.CpuUsage.ToString():0.#}%\t{ProcessMod.FormatMemSize(process.WorkingSet64)}";
+                    $"{process.Id.ToString()}\t{process.ProcessName}\t{process.CpuUsage:0.#}%\t{ProcessMod.FormatMemSize(process.WorkingSet64)}";
                 output.Add(data);
             }
             
