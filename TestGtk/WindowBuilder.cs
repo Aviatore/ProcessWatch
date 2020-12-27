@@ -63,9 +63,12 @@ namespace TestGtk
             CellRendererText render = new CellRendererText();
             render.Alignment = Pango.Alignment.Right;
             render.Xalign = 0.5f;
-            
+
+
+            TreeModelSort sortable = new TreeModelSort(store);
+            sortable.SetSortFunc(0, ProcessNameSortFunc);
             tree = new TreeView();
-            tree.Model = store;
+            tree.Model = sortable;
             
             for (int i = 0; i < 4; i++)
             {
@@ -76,6 +79,7 @@ namespace TestGtk
                 column.SortIndicator = true;
                 column.Alignment = 0.5f;
                 column.Expand = true;
+                column.SortColumnId = i;
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
 
@@ -133,9 +137,16 @@ namespace TestGtk
             //tree.NodeStore = store;
             tree.Selection.Mode = SelectionMode.Multiple;
             tree.Selection.Changed += OnSelectionChanged;
-            
+
             tree.ShowAll();
             window.ShowAll();
+        }
+
+        private int ProcessNameSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            string s1 = (string) model.GetValue(a, 0);
+            string s2 = (string) model.GetValue(b, 0);
+            return String.Compare(s1, s2);
         }
 
         private void StoreClear()
