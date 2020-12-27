@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Timers;
 using Gtk;
+using System.Diagnostics;
 
 namespace TestGtk
 {
@@ -12,9 +13,11 @@ namespace TestGtk
         private TreeView tree;
         private ScrolledWindow scrolledWindow;
         private double _currentScrollPosition;
+        private List<int> _processIdToKill;
 
         public WindowBuilder()
         {
+            _processIdToKill = new List<int>();
             store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string));
             Window window;
 
@@ -87,6 +90,7 @@ namespace TestGtk
             vbox.PackStart(frame, false, false, 0);
 
             Button killButton = new Button("Kill process");
+            killButton.Clicked += KillProcess;
             vbox.PackStart(killButton, false, false, 0);
             
             // Create an instance of the object Updater
@@ -128,6 +132,7 @@ namespace TestGtk
             //tree.NodeSelection.Changed += OnSelectionChanged;
             //tree.NodeStore = store;
             tree.Selection.Mode = SelectionMode.Multiple;
+            tree.Selection.Changed += OnSelectionChanged;
             
             tree.ShowAll();
             window.ShowAll();
@@ -143,6 +148,17 @@ namespace TestGtk
 
                 store.IterNext(ref iter);
             }
+        }
+
+        private void KillProcess(object o, EventArgs args)
+        {
+            foreach (var id in _processIdToKill)
+            {
+                Process process = Process.GetProcessById(id);
+                process.Kill();
+            }
+            
+            _updater.Run();
         }
 
         private void LoadStore(List<ProcessMod> element)
@@ -195,13 +211,24 @@ namespace TestGtk
             Application.Quit();
         }
         
-        static void OnSelectionChanged(object o, EventArgs args)
+        void OnSelectionChanged(object o, EventArgs args)
         {
-            NodeSelection selection = (NodeSelection)o;
-            MyTreeNode node = (MyTreeNode) selection.SelectedNode;
-            if (node != null)
+            TreeSelection selection = (TreeSelection)o;
+            TreePath[] selectedRows = selection.GetSelectedRows();
+
+            _processIdToKill.Clear();
+            TreeIter iter;
+            if (selectedRows.Length > 0)
             {
-                Console.WriteLine(node.ProcessName);
+                store.GetIter(out iter, selectedRows[0]);
+                Console.WriteLine(store.GetValue(iter, 1));
+                
+                int id;
+                int.TryParse(store.GetValue(iter, 1).ToString(), out id);
+                if (id != 0)
+                {
+                    _processIdToKill.Add(id);
+                }
                 _updater.Stop();
             }
             else
