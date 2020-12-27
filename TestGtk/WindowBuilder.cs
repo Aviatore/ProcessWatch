@@ -155,6 +155,7 @@ namespace TestGtk
             foreach (var id in _processIdToKill)
             {
                 Process process = Process.GetProcessById(id);
+                Console.WriteLine($"{id} killed");
                 process.Kill();
             }
             
@@ -220,20 +221,28 @@ namespace TestGtk
             TreeIter iter;
             if (selectedRows.Length > 0)
             {
-                store.GetIter(out iter, selectedRows[0]);
-                Console.WriteLine(store.GetValue(iter, 1));
-                
-                int id;
-                int.TryParse(store.GetValue(iter, 1).ToString(), out id);
-                if (id != 0)
+                for (int i = 0; i < selectedRows.Length; i++)
                 {
-                    _processIdToKill.Add(id);
+                    store.GetIter(out iter, selectedRows[i]);
+                    Console.WriteLine(store.GetValue(iter, 1));
+
+                    int id;
+                    int.TryParse(store.GetValue(iter, 1).ToString(), out id);
+                    if (id != 0)
+                    {
+                        _processIdToKill.Add(id);
+                    }
                 }
                 _updater.Stop();
             }
             else
             {
                 Console.WriteLine("Node is null.");
+            }
+
+            foreach (var element in _processIdToKill)
+            {
+                Console.WriteLine($"{element} added.");
             }
         }
  
