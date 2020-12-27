@@ -7,11 +7,14 @@ namespace TestGtk
     public class WindowBuilder
     {
         private static ProcessGrabber _updater;
-        private static NodeStore store;
+        private static ListStore store;
+        private TreeView tree;
+        private ScrolledWindow scrolledWindow;
+        private double _currentScrollPosition;
 
         public WindowBuilder()
         {
-            store = new NodeStore(typeof(MyTreeNode));
+            store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string));
             Window window;
 
             Application.Init ();
@@ -40,6 +43,10 @@ namespace TestGtk
             vbox.PackStart (hbox, false, false, 0);
             
             Frame frame = new Frame ("Processes");
+
+            scrolledWindow = new ScrolledWindow();
+            scrolledWindow.HeightRequest = 200;
+            
             VBox processesVBox = new VBox(false, 5);
             
             string[] columnLabels = {
@@ -53,7 +60,8 @@ namespace TestGtk
             render.Alignment = Pango.Alignment.Right;
             render.Xalign = 0.5f;
             
-            NodeView view = new NodeView();
+            tree = new TreeView();
+            tree.Model = store;
             
             for (int i = 0; i < 4; i++)
             {
@@ -66,15 +74,23 @@ namespace TestGtk
                 column.Expand = true;
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
-                
-                view.AppendColumn(column);
+
+                tree.AppendColumn(column);
             }
             
-            processesVBox.PackStart(view, false, false, 0);
+            scrolledWindow.Add(tree);
+            //processesVBox.PackStart(tree, false, false, 0);
             
-            frame.Add(processesVBox);
+            frame.Add(scrolledWindow);
 
             vbox.PackStart(frame, false, false, 0);
+
+            ScrolledWindow testWindow = new ScrolledWindow();
+            testWindow.HeightRequest = 100;
+            vbox.PackStart(testWindow, false, false, 0);
+
+            Button killButton = new Button("Kill process");
+            vbox.PackStart(killButton, false, false, 0);
             
             // Create an instance of the object Updater
             _updater = new ProcessGrabber();
@@ -82,32 +98,42 @@ namespace TestGtk
             {
                 Application.Invoke(delegate
                 {
-                    store = null;
-                    store = new NodeStore(typeof(MyTreeNode));
+                    _currentScrollPosition = tree.Vadjustment.Value;
+                    store.Clear();
 
                     foreach (var element in list)
                     {
-                        store.AddNode(new MyTreeNode(element.ProcessName, element.Id.ToString(), ProcessMod.FormatMemSize(element.WorkingSet64), ProcessMod.FormatCpuUsage(element.CpuUsage)));
+                        store.AppendValues(element.ProcessName, element.Id.ToString(),
+                            ProcessMod.FormatMemSize(element.WorkingSet64),
+                            ProcessMod.FormatCpuUsage(element.CpuUsage));
                     }
-
-                    view.NodeStore = store;
-
+                    
                     window.ShowAll();
-                    view.ShowAll();
+                    tree.ShowAll();
                 });
             };
+
+            tree.Vadjustment.Changed += (sender, args) =>
+            {
+                tree.Vadjustment.Value = _currentScrollPosition;
+            }; 
             
             // Fill up TreeView with empty data
             // This prevents a problem with the empty display after launching the program
             for (int i = 0; i < 15; i ++)
             {
-                store.AddNode(new MyTreeNode());
+                store.AppendValues("", "", "", "");
             }
-
-            view.NodeStore = store;
-            view.ShowAll();
+            
+            //tree.NodeSelection.Changed += OnSelectionChanged;
+            //tree.NodeStore = store;
+            tree.Selection.Mode = SelectionMode.Multiple;
+            
+            tree.ShowAll();
             window.ShowAll();
         }
+        
+        
         
         static void Start(object sender, EventArgs args)
         {
@@ -124,6 +150,21 @@ namespace TestGtk
             _updater.Stop();
             Application.Quit();
         }
+        
+        static void OnSelectionChanged(object o, EventArgs args)
+        {
+            NodeSelection selection = (NodeSelection)o;
+            MyTreeNode node = (MyTreeNode) selection.SelectedNode;
+            if (node != null)
+            {
+                Console.WriteLine(node.ProcessName);
+                _updater.Stop();
+            }
+            else
+            {
+                Console.WriteLine("Node is null.");
+            }
+        }
  
         static void exitbutton_event (object obj, EventArgs args)
         {
@@ -134,5 +175,6 @@ namespace TestGtk
         {
             Application.Run();
         }
+        
     }
 }
