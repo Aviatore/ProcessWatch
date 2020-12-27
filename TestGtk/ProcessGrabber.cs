@@ -39,7 +39,8 @@ namespace TestGtk
             //Console.WriteLine("ok");
             List<string> output = new List<string>();
             ProcessMod[] processes = ProcessMod.GetProcesses();
-            IEnumerable<ProcessMod> processesSorted = processes.OrderByDescending(process => process.CpuUsage).Take(15);
+            //IEnumerable<ProcessMod> processesSorted = processes.OrderByDescending(process => process.CpuUsage).Take(15);
+            IEnumerable<ProcessMod> processesSorted = processes.OrderByDescending(process => process.CpuUsage);
 
             foreach (var process in processesSorted)
             {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Timers;
 using Gtk;
 
@@ -20,7 +21,7 @@ namespace TestGtk
             Application.Init ();
             
             window = new Window ("Label sample");
-            window.Resize(400, 600);
+            window.Resize(500, 600);
             window.Title = "Label";
             window.BorderWidth = 5;
             
@@ -45,7 +46,7 @@ namespace TestGtk
             Frame frame = new Frame ("Processes");
 
             scrolledWindow = new ScrolledWindow();
-            scrolledWindow.HeightRequest = 200;
+            scrolledWindow.HeightRequest = 400;
             
             VBox processesVBox = new VBox(false, 5);
             
@@ -85,10 +86,6 @@ namespace TestGtk
 
             vbox.PackStart(frame, false, false, 0);
 
-            ScrolledWindow testWindow = new ScrolledWindow();
-            testWindow.HeightRequest = 100;
-            vbox.PackStart(testWindow, false, false, 0);
-
             Button killButton = new Button("Kill process");
             vbox.PackStart(killButton, false, false, 0);
             
@@ -99,15 +96,18 @@ namespace TestGtk
                 Application.Invoke(delegate
                 {
                     _currentScrollPosition = tree.Vadjustment.Value;
-                    store.Clear();
+                    //store.Clear();
+                    StoreClear();
+                    LoadStore(list);
 
+                    /*
                     foreach (var element in list)
                     {
                         store.AppendValues(element.ProcessName, element.Id.ToString(),
                             ProcessMod.FormatMemSize(element.WorkingSet64),
                             ProcessMod.FormatCpuUsage(element.CpuUsage));
                     }
-                    
+                    */
                     window.ShowAll();
                     tree.ShowAll();
                 });
@@ -132,8 +132,52 @@ namespace TestGtk
             tree.ShowAll();
             window.ShowAll();
         }
-        
-        
+
+        private void StoreClear()
+        {
+            TreeIter iter;
+            store.GetIterFirst(out iter);
+            for (int i = 0; i < store.IterNChildren(); i++)
+            {
+                store.SetValues(iter, "", "", "", "");
+
+                store.IterNext(ref iter);
+            }
+        }
+
+        private void LoadStore(List<ProcessMod> element)
+        {
+            int elementIndex = 0;
+            TreeIter iter;
+            store.GetIterFirst(out iter);
+            for (int i = 0; i < store.IterNChildren(); i++)
+            {
+                if (element.Count - 1 > i)
+                {
+                    store.SetValues(iter, element[i].ProcessName, element[i].Id.ToString(),
+                        ProcessMod.FormatMemSize(element[i].WorkingSet64),
+                        ProcessMod.FormatCpuUsage(element[i].CpuUsage));
+                    
+                    store.IterNext(ref iter);
+                }
+                else
+                {
+                    store.Remove(ref iter);
+                }
+                
+                elementIndex++;
+            }
+
+            if (element.Count > elementIndex)
+            {
+                for (int i = elementIndex; i < element.Count; i++)
+                {
+                    store.AppendValues(element[i].ProcessName, element[i].Id.ToString(),
+                        ProcessMod.FormatMemSize(element[i].WorkingSet64),
+                        ProcessMod.FormatCpuUsage(element[i].CpuUsage));
+                }
+            }
+        }
         
         static void Start(object sender, EventArgs args)
         {
