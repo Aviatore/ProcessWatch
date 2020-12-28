@@ -4,6 +4,7 @@ using System.Timers;
 using Gtk;
 using System.Diagnostics;
 
+
 namespace TestGtk
 {
     public class WindowBuilder
@@ -67,6 +68,9 @@ namespace TestGtk
 
             TreeModelSort sortable = new TreeModelSort(store);
             sortable.SetSortFunc(0, ProcessNameSortFunc);
+            sortable.SetSortFunc(1, IdSortFunc);
+            sortable.SetSortFunc(2, WorkingSetSortFunc);
+            sortable.SetSortFunc(3, CpuUsageSortFunc);
             tree = new TreeView();
             tree.Model = sortable;
             
@@ -147,6 +151,66 @@ namespace TestGtk
             string s1 = (string) model.GetValue(a, 0);
             string s2 = (string) model.GetValue(b, 0);
             return String.Compare(s1, s2);
+        }
+        
+        private int IdSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 1).ToString();
+                string val2 = model.GetValue(b, 1).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                int s1 = Convert.ToInt32(val1);
+                int s2 = Convert.ToInt32(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int WorkingSetSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 2).ToString().Split(" ")[0];
+                string val2 = model.GetValue(b, 2).ToString().Split(" ")[0];
+                
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                double s1 = Convert.ToDouble(val1);
+                double s2 = Convert.ToDouble(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int CpuUsageSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 3).ToString().Split(" ")[0];
+                string val2 = model.GetValue(b, 3).ToString().Split(" ")[0];
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+                
+                double s1 = Convert.ToDouble(val1);
+                double s2 = Convert.ToDouble(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
         }
 
         private void StoreClear()
