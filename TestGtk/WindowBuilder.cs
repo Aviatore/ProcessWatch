@@ -65,7 +65,6 @@ namespace TestGtk
             render.Alignment = Pango.Alignment.Right;
             render.Xalign = 0.5f;
 
-
             TreeModelSort sortable = new TreeModelSort(store);
             sortable.SetSortFunc(0, ProcessNameSortFunc);
             sortable.SetSortFunc(1, IdSortFunc);
@@ -86,6 +85,9 @@ namespace TestGtk
                 column.SortColumnId = i;
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
+                
+                if (i == 2)
+                    column.SetCellDataFunc(render, WorkingSetFormatter);
 
                 tree.AppendColumn(column);
             }
@@ -146,11 +148,38 @@ namespace TestGtk
             window.ShowAll();
         }
 
+        private void WorkingSetFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string data = model.GetValue(iter, 2).ToString();
+                double dataDouble = Convert.ToDouble(data);
+                if (data != "")
+                {
+                    ((CellRendererText) cell).Text = ProcessMod.FormatMemSize(dataDouble);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is FormatException)
+                {
+                    ((CellRendererText) cell).Text = "";
+                }
+            }
+        }
+
         private int ProcessNameSortFunc(ITreeModel model, TreeIter a, TreeIter b)
         {
-            string s1 = (string) model.GetValue(a, 0);
-            string s2 = (string) model.GetValue(b, 0);
-            return String.Compare(s1, s2);
+            try
+            {
+                string s1 = (string) model.GetValue(a, 0);
+                string s2 = (string) model.GetValue(b, 0);
+                return String.Compare(s1, s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
         }
         
         private int IdSortFunc(ITreeModel model, TreeIter a, TreeIter b)
@@ -247,7 +276,7 @@ namespace TestGtk
                 if (element.Count - 1 > i)
                 {
                     store.SetValues(iter, element[i].ProcessName, element[i].Id.ToString(),
-                        ProcessMod.FormatMemSize(element[i].WorkingSet64),
+                        element[i].WorkingSet64.ToString(),
                         ProcessMod.FormatCpuUsage(element[i].CpuUsage));
                     
                     store.IterNext(ref iter);
