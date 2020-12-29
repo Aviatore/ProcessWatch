@@ -70,6 +70,10 @@ namespace TestGtk
             sortable.SetSortFunc(1, IdSortFunc);
             sortable.SetSortFunc(2, WorkingSetSortFunc);
             sortable.SetSortFunc(3, CpuUsageSortFunc);
+
+            TreeModelFilter filter = new TreeModelFilter(sortable, null);
+            
+            
             tree = new TreeView();
             tree.Model = sortable;
             
