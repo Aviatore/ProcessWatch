@@ -19,7 +19,8 @@ namespace TestGtk
         public WindowBuilder()
         {
             _processIdToKill = new List<int>();
-            store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string));
+            store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
+                typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
             Window window;
 
             Application.Init ();
@@ -55,10 +56,16 @@ namespace TestGtk
             VBox processesVBox = new VBox(false, 5);
             
             string[] columnLabels = {
+                "PID",
                 "Process name",
-                "Process Id",
-                "WorkingSet64",
-                "CPU usage"
+                "Memory usage",
+                "Priority",
+                "User CPU Time",
+                "Privileged CPU Time",
+                "Total CPU Time",
+                "CPU usage",
+                "Threads",
+                "Start Time"
             };
             
             CellRendererText render = new CellRendererText();
@@ -66,10 +73,15 @@ namespace TestGtk
             render.Xalign = 0.5f;
 
             TreeModelSort sortable = new TreeModelSort(store);
-            sortable.SetSortFunc(0, ProcessNameSortFunc);
-            sortable.SetSortFunc(1, IdSortFunc);
+            sortable.SetSortFunc(0, IdSortFunc);
+            sortable.SetSortFunc(1, ProcessNameSortFunc);
             sortable.SetSortFunc(2, WorkingSetSortFunc);
-            sortable.SetSortFunc(3, CpuUsageSortFunc);
+            sortable.SetSortFunc(4, UserCpuTimeSortFunc);
+            sortable.SetSortFunc(5, PrivilegedCpuTimeSortFunc);
+            sortable.SetSortFunc(6, TotalCpuTimeSortFunc);
+            sortable.SetSortFunc(7, CpuUsageSortFunc);
+            sortable.SetSortFunc(8, ThreadCountFunc);
+            sortable.SetSortFunc(9, StartTimeSortFunc);
 
             TreeModelFilter filter = new TreeModelFilter(sortable, null);
             
@@ -77,7 +89,7 @@ namespace TestGtk
             tree = new TreeView();
             tree.Model = sortable;
             
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 10; i++)
             {
                 TreeViewColumn column = new TreeViewColumn();
                 column.Clickable = true;
@@ -89,9 +101,28 @@ namespace TestGtk
                 column.SortColumnId = i;
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
-                
-                if (i == 2)
-                    column.SetCellDataFunc(render, WorkingSetFormatter);
+
+                switch (i)
+                {
+                    case 2:
+                        column.SetCellDataFunc(render, WorkingSetFormatter);
+                        break;
+                    case 4:
+                        column.SetCellDataFunc(render, UserCpuTimeFormatter);
+                        break;
+                    case 5:
+                        column.SetCellDataFunc(render, PrivilegedCpuTimeFormatter);
+                        break;
+                    case 6:
+                        column.SetCellDataFunc(render, TotalCpuTimeFormatter);
+                        break;
+                    case 7:
+                        column.SetCellDataFunc(render, CpuUsageFormatter);
+                        break;
+                    case 9:
+                        column.SetCellDataFunc(render, StartTimeFormatter);
+                        break;
+                }
 
                 tree.AppendColumn(column);
             }
@@ -140,7 +171,7 @@ namespace TestGtk
             // This prevents a problem with the empty display after launching the program
             for (int i = 0; i < 15; i ++)
             {
-                store.AppendValues("", "", "", "");
+                store.AppendValues("", "", "", "", "", "", "", "", "", "");
             }
             
             //tree.NodeSelection.Changed += OnSelectionChanged;
@@ -171,14 +202,134 @@ namespace TestGtk
                 }
             }
         }
+        
+        private void StartTimeFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string data = model.GetValue(iter, 9).ToString();
+                long dataLong = Convert.ToInt64(data);
+                if (data != "")
+                {
+                    ((CellRendererText) cell).Text = ProcessMod.FormatTime(dataLong);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is FormatException)
+                {
+                    ((CellRendererText) cell).Text = "";
+                }
+            }
+        }
+        
+        private void UserCpuTimeFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string data = model.GetValue(iter, 4).ToString();
+                long dataLong = Convert.ToInt64(data);
+                if (data != "")
+                {
+                    ((CellRendererText) cell).Text = ProcessMod.FormatTimeMs(dataLong);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is FormatException)
+                {
+                    ((CellRendererText) cell).Text = "";
+                }
+            }
+        }
+        
+        private void PrivilegedCpuTimeFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string data = model.GetValue(iter, 5).ToString();
+                long dataLong = Convert.ToInt64(data);
+                if (data != "")
+                {
+                    ((CellRendererText) cell).Text = ProcessMod.FormatTimeMs(dataLong);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is FormatException)
+                {
+                    ((CellRendererText) cell).Text = "";
+                }
+            }
+        }
+        
+        private void TotalCpuTimeFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string data = model.GetValue(iter, 6).ToString();
+                long dataLong = Convert.ToInt64(data);
+                if (data != "")
+                {
+                    ((CellRendererText) cell).Text = ProcessMod.FormatTimeMs(dataLong);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is FormatException)
+                {
+                    ((CellRendererText) cell).Text = "";
+                }
+            }
+        }
+        
+        private void CpuUsageFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string data = model.GetValue(iter, 7).ToString();
+                double dataDouble = Convert.ToDouble(data);
+                if (data != "")
+                {
+                    ((CellRendererText) cell).Text = ProcessMod.FormatCpuUsage(dataDouble);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is FormatException)
+                {
+                    ((CellRendererText) cell).Text = "";
+                }
+            }
+        }
 
         private int ProcessNameSortFunc(ITreeModel model, TreeIter a, TreeIter b)
         {
             try
             {
-                string s1 = (string) model.GetValue(a, 0);
-                string s2 = (string) model.GetValue(b, 0);
+                string s1 = (string) model.GetValue(a, 1);
+                string s2 = (string) model.GetValue(b, 1);
                 return String.Compare(s1, s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int CpuUsageSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 7).ToString();
+                string val2 = model.GetValue(b, 7).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                double s1 = Convert.ToDouble(val1);
+                double s2 = Convert.ToDouble(val2);
+                return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
             {
@@ -190,8 +341,108 @@ namespace TestGtk
         {
             try
             {
-                string val1 = model.GetValue(a, 1).ToString();
-                string val2 = model.GetValue(b, 1).ToString();
+                string val1 = model.GetValue(a, 0).ToString();
+                string val2 = model.GetValue(b, 0).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                int s1 = Convert.ToInt32(val1);
+                int s2 = Convert.ToInt32(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int StartTimeSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 9).ToString();
+                string val2 = model.GetValue(b, 9).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                long s1 = Convert.ToInt64(val1);
+                long s2 = Convert.ToInt64(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int ThreadCountFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 8).ToString();
+                string val2 = model.GetValue(b, 8).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                int s1 = Convert.ToInt32(val1);
+                int s2 = Convert.ToInt32(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int UserCpuTimeSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 4).ToString();
+                string val2 = model.GetValue(b, 4).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                int s1 = Convert.ToInt32(val1);
+                int s2 = Convert.ToInt32(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int PrivilegedCpuTimeSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 5).ToString();
+                string val2 = model.GetValue(b, 5).ToString();
+
+                if (val1 == "" || val2 == "")
+                    return 0;
+
+                int s1 = Convert.ToInt32(val1);
+                int s2 = Convert.ToInt32(val2);
+                return s1.CompareTo(s2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int TotalCpuTimeSortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = model.GetValue(a, 6).ToString();
+                string val2 = model.GetValue(b, 6).ToString();
 
                 if (val1 == "" || val2 == "")
                     return 0;
@@ -225,26 +476,6 @@ namespace TestGtk
                 return 0;
             }
         }
-        
-        private int CpuUsageSortFunc(ITreeModel model, TreeIter a, TreeIter b)
-        {
-            try
-            {
-                string val1 = model.GetValue(a, 3).ToString().Split(" ")[0];
-                string val2 = model.GetValue(b, 3).ToString().Split(" ")[0];
-
-                if (val1 == "" || val2 == "")
-                    return 0;
-                
-                double s1 = Convert.ToDouble(val1);
-                double s2 = Convert.ToDouble(val2);
-                return s1.CompareTo(s2);
-            }
-            catch (NullReferenceException e)
-            {
-                return 0;
-            }
-        }
 
         private void StoreClear()
         {
@@ -252,7 +483,7 @@ namespace TestGtk
             store.GetIterFirst(out iter);
             for (int i = 0; i < store.IterNChildren(); i++)
             {
-                store.SetValues(iter, "", "", "", "");
+                store.SetValues(iter, "", "", "", "", "", "", "", "", "", "");
 
                 store.IterNext(ref iter);
             }
@@ -279,10 +510,18 @@ namespace TestGtk
             {
                 if (element.Count - 1 > i)
                 {
-                    store.SetValues(iter, element[i].ProcessName, element[i].Id.ToString(),
+                    store.SetValues(iter,
+                        element[i].Id.ToString(),
+                        element[i].ProcessName,
                         element[i].WorkingSet64.ToString(),
-                        ProcessMod.FormatCpuUsage(element[i].CpuUsage));
-                    
+                        element[i].PriorityClass,
+                        element[i].UserProcessorTime.ToString(),
+                        element[i].PrivilegedProcessorTime.ToString(),
+                        element[i].TotalProcessorTime.ToString(),
+                        element[i].CpuUsage.ToString(),
+                        element[i].ThreadCount.ToString(),
+                        element[i].StartTime.ToString()
+                    );
                     store.IterNext(ref iter);
                 }
                 else
