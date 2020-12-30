@@ -28,11 +28,12 @@ namespace TestGtk
 
         public static ProcessMod[] GetProcesses()
         {
-            List<ProcessMod> proc = new List<ProcessMod>();
-            
             Process[] processes = Process.GetProcesses();
             
-            List<Task<ProcessMod>> tasks = new List<Task<ProcessMod>>();
+            // The list is initialized with the specific size to solve memory allocation issues
+            List<ProcessMod> proc = new List<ProcessMod>(processes.Length);
+            
+            List<Task<ProcessMod>> tasks = new List<Task<ProcessMod>>(processes.Length);
             
             foreach (var process in processes)
             {
@@ -83,7 +84,6 @@ namespace TestGtk
             tmp.ThreadCount = proc.Threads.Count;
             tmp.StartTime = proc.StartTime.Ticks;
             //Console.WriteLine(tmp.CpuUsage);
-            
             return tmp;
         }
 

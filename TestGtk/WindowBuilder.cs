@@ -18,6 +18,7 @@ namespace TestGtk
 
         public WindowBuilder()
         {
+            _updater = new ProcessGrabber();
             _processIdToKill = new List<int>();
             store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
                 typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
@@ -88,7 +89,8 @@ namespace TestGtk
             
             tree = new TreeView();
             tree.Model = sortable;
-            
+
+            _updater.ColumnToSort[1] = null;
             for (int i = 0; i < 10; i++)
             {
                 TreeViewColumn column = new TreeViewColumn();
@@ -102,10 +104,24 @@ namespace TestGtk
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
 
+                var i1 = i;
+                column.Clicked += (sender, args) =>
+                {
+                    Console.WriteLine(column.SortOrder);
+                    _updater.ColumnToSort[0] = i1;
+                    _updater.ColumnToSort[1] = SortOrderToInt(column.SortOrder);
+                }; 
+
                 switch (i)
                 {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
                     case 2:
                         column.SetCellDataFunc(render, WorkingSetFormatter);
+                        break;
+                    case 3:
                         break;
                     case 4:
                         column.SetCellDataFunc(render, UserCpuTimeFormatter);
@@ -118,6 +134,8 @@ namespace TestGtk
                         break;
                     case 7:
                         column.SetCellDataFunc(render, CpuUsageFormatter);
+                        break;
+                    case 8:
                         break;
                     case 9:
                         column.SetCellDataFunc(render, StartTimeFormatter);
@@ -139,7 +157,6 @@ namespace TestGtk
             vbox.PackStart(killButton, false, false, 0);
             
             // Create an instance of the object Updater
-            _updater = new ProcessGrabber();
             _updater.OnResult += (sender, list) =>
             {
                 Application.Invoke(delegate
@@ -181,6 +198,17 @@ namespace TestGtk
 
             tree.ShowAll();
             window.ShowAll();
+        }
+
+        private int? SortOrderToInt(SortType sortType)
+        {
+            if (sortType == SortType.Ascending)
+                return 0;
+            
+            if (sortType == SortType.Descending)
+                return 1;
+            
+            return null;
         }
 
         private void WorkingSetFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
@@ -536,9 +564,16 @@ namespace TestGtk
             {
                 for (int i = elementIndex; i < element.Count; i++)
                 {
-                    store.AppendValues(element[i].ProcessName, element[i].Id.ToString(),
-                        ProcessMod.FormatMemSize(element[i].WorkingSet64),
-                        ProcessMod.FormatCpuUsage(element[i].CpuUsage));
+                    store.AppendValues(element[i].Id.ToString(),
+                        element[i].ProcessName,
+                        element[i].WorkingSet64.ToString(),
+                        element[i].PriorityClass,
+                        element[i].UserProcessorTime.ToString(),
+                        element[i].PrivilegedProcessorTime.ToString(),
+                        element[i].TotalProcessorTime.ToString(),
+                        element[i].CpuUsage.ToString(),
+                        element[i].ThreadCount.ToString(),
+                        element[i].StartTime.ToString());
                 }
             }
         }
