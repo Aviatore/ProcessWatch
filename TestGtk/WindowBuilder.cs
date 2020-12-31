@@ -45,9 +45,25 @@ namespace TestGtk
             
             hbox.PackStart(button, false, false, 0);
             hbox.PackStart(button2, false, false, 0);
+
+            HBox FiltrationHBox = new HBox(false, 5);
+            string[] filtrationOptions = new[]
+            {
+                "All processes",
+                "Filter by PID",
+                "Filter by Process Name",
+                "Filter by Memory Usage",
+                "Filter by Priority",
+                "Filter by CPU usage",
+                "Filter by Start Time"
+            };
+            ComboBox filtrationCombo = new ComboBox(filtrationOptions);
+            //filtrationCombo.SetSizeRequest(200, 5);
+            FiltrationHBox.PackStart(filtrationCombo, false, false, 0);
             
             window.Add (vbox);
             vbox.PackStart (hbox, false, false, 0);
+            vbox.PackStart(FiltrationHBox, false, false, 0);
             
             Frame frame = new Frame ("Processes");
 
