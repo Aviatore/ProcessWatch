@@ -60,7 +60,7 @@ namespace TestGtk
         {
             DateTime startTime = DateTime.UtcNow;
             var startCpuUsage = proc.TotalProcessorTime;
-        
+            
             await Task.Delay(500);
         
             DateTime endTime = DateTime.UtcNow;

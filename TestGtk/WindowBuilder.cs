@@ -77,6 +77,7 @@ namespace TestGtk
             sortable.SetSortFunc(0, IdSortFunc);
             sortable.SetSortFunc(1, ProcessNameSortFunc);
             sortable.SetSortFunc(2, WorkingSetSortFunc);
+            sortable.SetSortFunc(3, PrioritySortFunc);
             sortable.SetSortFunc(4, UserCpuTimeSortFunc);
             sortable.SetSortFunc(5, PrivilegedCpuTimeSortFunc);
             sortable.SetSortFunc(6, TotalCpuTimeSortFunc);
@@ -109,7 +110,7 @@ namespace TestGtk
                 {
                     Console.WriteLine(column.SortOrder);
                     _updater.ColumnToSort[0] = i1;
-                    _updater.ColumnToSort[1] = SortOrderToInt(column.SortOrder);
+                    _updater.ColumnToSort[1] = SortOrderToInt();
                 }; 
 
                 switch (i)
@@ -200,13 +201,23 @@ namespace TestGtk
             window.ShowAll();
         }
 
-        private int? SortOrderToInt(SortType sortType)
+        private int? SortOrderToInt(SortType? sortType=null)
         {
             if (sortType == SortType.Ascending)
                 return 0;
             
-            if (sortType == SortType.Descending)
+            if (sortType == SortType.Descending && _updater.ColumnToSort[1] == 0)
                 return 1;
+
+            if (_updater.ColumnToSort[1] == null)
+            {
+                return 0;
+            }
+
+            if (_updater.ColumnToSort[1] == 0)
+            {
+                return 1;
+            }
             
             return null;
         }
@@ -320,6 +331,7 @@ namespace TestGtk
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatCpuUsage(dataDouble);
+                    //((CellRendererText) cell).Text = dataDouble.ToString();
                 }
             }
             catch (Exception e)
@@ -335,9 +347,31 @@ namespace TestGtk
         {
             try
             {
-                string s1 = (string) model.GetValue(a, 1);
-                string s2 = (string) model.GetValue(b, 1);
-                return String.Compare(s1, s2);
+                string val1 = (string) model.GetValue(a, 1);
+                string val2 = (string) model.GetValue(b, 1);
+                
+                if (val1 == "" || val2 == "")
+                    return 1;
+                
+                return String.Compare(val1, val2);
+            }
+            catch (NullReferenceException e)
+            {
+                return 0;
+            }
+        }
+        
+        private int PrioritySortFunc(ITreeModel model, TreeIter a, TreeIter b)
+        {
+            try
+            {
+                string val1 = (string) model.GetValue(a, 3);
+                string val2 = (string) model.GetValue(b, 3);
+                
+                if (val1 == "" || val2 == "")
+                    return 1;
+                
+                return String.Compare(val1, val2);
             }
             catch (NullReferenceException e)
             {
@@ -353,7 +387,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 7).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 double s1 = Convert.ToDouble(val1);
                 double s2 = Convert.ToDouble(val2);
@@ -373,7 +407,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 0).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 int s1 = Convert.ToInt32(val1);
                 int s2 = Convert.ToInt32(val2);
@@ -393,7 +427,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 9).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 long s1 = Convert.ToInt64(val1);
                 long s2 = Convert.ToInt64(val2);
@@ -413,7 +447,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 8).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 int s1 = Convert.ToInt32(val1);
                 int s2 = Convert.ToInt32(val2);
@@ -433,7 +467,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 4).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 int s1 = Convert.ToInt32(val1);
                 int s2 = Convert.ToInt32(val2);
@@ -453,7 +487,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 5).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 int s1 = Convert.ToInt32(val1);
                 int s2 = Convert.ToInt32(val2);
@@ -467,16 +501,26 @@ namespace TestGtk
         
         private int TotalCpuTimeSortFunc(ITreeModel model, TreeIter a, TreeIter b)
         {
+            /*
+            if (_updater.ColumnToSort[0] == 6)
+            {
+                Console.WriteLine("wait");
+                return 0;
+            }
+            */
             try
             {
                 string val1 = model.GetValue(a, 6).ToString();
                 string val2 = model.GetValue(b, 6).ToString();
 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 int s1 = Convert.ToInt32(val1);
                 int s2 = Convert.ToInt32(val2);
+                
+                //Console.WriteLine($"{val1} {val2} {s1.CompareTo(s2).ToString()}");
+                
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -493,7 +537,7 @@ namespace TestGtk
                 string val2 = model.GetValue(b, 2).ToString().Split(" ")[0];
                 
                 if (val1 == "" || val2 == "")
-                    return 0;
+                    return 1;
 
                 double s1 = Convert.ToDouble(val1);
                 double s2 = Convert.ToDouble(val2);
