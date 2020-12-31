@@ -15,6 +15,9 @@ namespace TestGtk
         private ScrolledWindow scrolledWindow;
         private double _currentScrollPosition;
         private List<int> _processIdToKill;
+        private string[] _filtrationOptions;
+        private HBox _filtrationHBox;
+        private Entry _entry;
 
         public WindowBuilder()
         {
@@ -46,8 +49,9 @@ namespace TestGtk
             hbox.PackStart(button, false, false, 0);
             hbox.PackStart(button2, false, false, 0);
 
-            HBox FiltrationHBox = new HBox(false, 5);
-            string[] filtrationOptions = new[]
+            _filtrationHBox = new HBox(false, 5);
+            _entry = new Entry();
+            _filtrationOptions = new[]
             {
                 "All processes",
                 "Filter by PID",
@@ -57,13 +61,13 @@ namespace TestGtk
                 "Filter by CPU usage",
                 "Filter by Start Time"
             };
-            ComboBox filtrationCombo = new ComboBox(filtrationOptions);
-            //filtrationCombo.SetSizeRequest(200, 5);
-            FiltrationHBox.PackStart(filtrationCombo, false, false, 0);
-            
+            ComboBox filtrationCombo = new ComboBox(_filtrationOptions);
+            filtrationCombo.Changed += ComboOnChanged;
+            _filtrationHBox.PackStart(filtrationCombo, false, false, 0);
+
             window.Add (vbox);
             vbox.PackStart (hbox, false, false, 0);
-            vbox.PackStart(FiltrationHBox, false, false, 0);
+            vbox.PackStart(_filtrationHBox, false, false, 0);
             
             Frame frame = new Frame ("Processes");
 
@@ -215,6 +219,32 @@ namespace TestGtk
 
             tree.ShowAll();
             window.ShowAll();
+        }
+
+        private void ComboOnChanged(object sender, EventArgs args)
+        {
+            ComboBox combo = (ComboBox) sender;
+
+            switch (_filtrationOptions[combo.Active])
+            {
+                case "All processes":
+                    FilterShowAll();
+                    break;
+                case "Filter by Process Name":
+                    FilterByProcessName();
+                    break;
+            }
+        }
+
+        private void FilterByProcessName()
+        {
+            _filtrationHBox.PackStart(_entry, false, false, 0);
+            _filtrationHBox.ShowAll();
+        }
+
+        private void FilterShowAll()
+        {
+            _filtrationHBox.Remove(_entry);
         }
 
         private int? SortOrderToInt(SortType? sortType=null)
