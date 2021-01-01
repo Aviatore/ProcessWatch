@@ -22,11 +22,18 @@ namespace TestGtk
         private string[] _filtrationOptions;
         private HBox _filtrationHBox;
         private Entry _entry;
+        private Entry _numericalEntry;
         private StringBuilder _searchPattern;
         private TreeModelFilter _filter;
+        private string _textToFilter;
+
+        private int _columnFilter;
+        //private bool FilterById(ITreeModel model, TreeIter iter)
 
         public WindowBuilder()
         {
+            _columnFilter = 0;
+            _textToFilter = "";
             _searchPattern = new StringBuilder();
             _updater = new ProcessGrabber();
             _processIdToKill = new List<int>();
@@ -58,6 +65,10 @@ namespace TestGtk
 
             _filtrationHBox = new HBox(false, 5);
             _entry = new Entry();
+            _entry.Changed += OnChanged;
+            _numericalEntry = new Entry();
+            _numericalEntry.Changed += OnChanged;
+
             _filtrationOptions = new[]
             {
                 "All processes",
@@ -102,9 +113,8 @@ namespace TestGtk
 
             //_filter = new TreeModelFilter(sortable, null);
             _filter = new TreeModelFilter(store, null);
-            
             _filter.VisibleFunc = FilterByName;
-            
+
             TreeModelSort sortable = new TreeModelSort(_filter);
             sortable.SetSortFunc(0, IdSortFunc);
             sortable.SetSortFunc(1, ProcessNameSortFunc);
@@ -240,29 +250,80 @@ namespace TestGtk
                 case "All processes":
                     FilterShowAll();
                     break;
+                case "Filter by PID":
+                    _columnFilter = 0;
+                    FilterByIdShowEntry();
+                    break;
                 case "Filter by Process Name":
-                    FilterByProcessName();
+                    _columnFilter = 1;
+                    FilterByNameShowEntry();
                     break;
             }
         }
 
-        private void FilterByProcessName()
+        private void FilterByNameShowEntry()
         {
-            _entry.Changed += OnChanged;
+            HideAllEntryWidgets();
             _filtrationHBox.PackStart(_entry, false, false, 0);
             _filtrationHBox.ShowAll();
+        }
+        
+        private void FilterByIdShowEntry()
+        {
+            HideAllEntryWidgets();
+            //_numericalEntry.KeyPressEvent += OnlyNumerical;
+            
+            _filtrationHBox.PackStart(_numericalEntry, false, false, 0);
+            _filtrationHBox.ShowAll();
+        }
+
+//        [ConnectBefore]
+        private void OnlyNumerical(object sender, KeyPressEventArgs args)
+        {
+            Entry entry = (Entry) sender;
+            
+            char inputKey = Convert.ToChar(args.Event.Key);
+            
+            if (!Char.IsNumber(inputKey))
+            {
+                entry.Text.Remove(entry.Text.IndexOf(inputKey), 1);
+            }
         }
 
         private void FilterShowAll()
         {
+            HideAllEntryWidgets();
+        }
+
+        private void HideAllEntryWidgets()
+        {
             _entry.Text = "";
-            _entry.Changed -= OnChanged;
-            _filtrationHBox.Remove(_entry);
+            _numericalEntry.Text = "";
+            
+            _filtrationHBox.Foreach(widget =>
+            {
+                if (widget.Name != "GtkComboBox")
+                {
+                    _filtrationHBox.Remove(widget);
+                }
+            });
+            //_filtrationHBox.Remove(_entry);
+            //_filtrationHBox.Remove(_numericalEntry);
         }
 
         //[ConnectBefore]
         private void OnChanged(object sender, EventArgs args)
         {
+            switch (_columnFilter)
+            {
+                case 0:
+                    _textToFilter = _numericalEntry.Text;
+                    break;
+                case 1: 
+                    _textToFilter = _entry.Text;
+                    break;
+            }
+            
             _filter.Refilter();
         }
 
@@ -270,7 +331,27 @@ namespace TestGtk
         {
             try
             {
-                string processName = model.GetValue(iter, 1).ToString();
+                string processName = model.GetValue(iter, _columnFilter).ToString();
+                
+                if (_textToFilter == "")
+                    return true;
+
+                if (processName.IndexOf(_textToFilter) > -1)
+                    return true;
+                
+                return false;
+            }
+            catch (NullReferenceException e)
+            {
+                return false;
+            }
+        }
+        
+        private bool FilterById(ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string processName = model.GetValue(iter, 0).ToString();
 
                 if (_entry.Text == "")
                     return true;
