@@ -23,6 +23,7 @@ namespace TestGtk
         private HBox _filtrationHBox;
         private Entry _entry;
         private Entry _numericalEntry;
+        //private SpinButton _numericalEntry;
         private StringBuilder _searchPattern;
         private TreeModelFilter _filter;
         private string _textToFilter;
@@ -67,7 +68,9 @@ namespace TestGtk
             _entry = new Entry();
             _entry.Changed += OnChanged;
             _numericalEntry = new Entry();
+            //_numericalEntry = new SpinButton(1, 9999999, 1);
             _numericalEntry.Changed += OnChanged;
+            _numericalEntry.TextInserted += OnlyNumerical;
 
             _filtrationOptions = new[]
             {
@@ -277,16 +280,18 @@ namespace TestGtk
             _filtrationHBox.ShowAll();
         }
 
-//        [ConnectBefore]
-        private void OnlyNumerical(object sender, KeyPressEventArgs args)
+        //[ConnectBefore]
+        private void OnlyNumerical(object sender, TextInsertedArgs args)
         {
             Entry entry = (Entry) sender;
+            Console.WriteLine($"input: {args.Position} real: {entry.Text}");
             
-            char inputKey = Convert.ToChar(args.Event.Key);
+            char inputKey = Convert.ToChar(args.NewText);
+            int inputKeyPosition = Convert.ToInt32(args.Position);
             
             if (!Char.IsNumber(inputKey))
             {
-                entry.Text.Remove(entry.Text.IndexOf(inputKey), 1);
+                entry.Text = entry.Text.Remove(inputKeyPosition - 1);
             }
         }
 
@@ -307,8 +312,6 @@ namespace TestGtk
                     _filtrationHBox.Remove(widget);
                 }
             });
-            //_filtrationHBox.Remove(_entry);
-            //_filtrationHBox.Remove(_numericalEntry);
         }
 
         //[ConnectBefore]
