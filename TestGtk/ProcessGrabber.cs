@@ -51,27 +51,17 @@ namespace TestGtk
             //IEnumerable<ProcessMod> processesSorted = null;
             //ProcessMod[] processesSorted = processes.OrderBy(process => process.Id).Select(element => element).ToArray();
 
-            OnResult?.Invoke(this, processes.OrderBy(process => process.Id).Select(element => element).ToList());
+            OnResult?.Invoke(this, processes.ToList());
         }
         
         public void GetData2()
         {
-            //Console.WriteLine("ok");
             List<string> output = new List<string>();
             ProcessMod[] processes = ProcessMod.GetProcesses();
             //IEnumerable<ProcessMod> processesSorted = processes.OrderByDescending(process => process.CpuUsage).Take(15);
             IEnumerable<ProcessMod> processesSorted = processes.OrderByDescending(process => process.CpuUsage);
 
-            foreach (var process in processesSorted)
-            {
-                string data =
-                    $"{process.Id.ToString()}\t{process.ProcessName}\t{process.CpuUsage:0.#}%\t{ProcessMod.FormatMemSize(process.WorkingSet64)}";
-                output.Add(data);
-            }
-
-            //OnResult?.Invoke(this, processes.ToList());
-            
-            OnResult?.Invoke(this, processes.OrderByDescending(process => process.CpuUsage).Select(element => element).ToList());
+            OnResult?.Invoke(this, processes.ToList());
         } 
     }
 }

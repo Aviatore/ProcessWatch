@@ -100,7 +100,12 @@ namespace TestGtk
             render.Alignment = Pango.Alignment.Right;
             render.Xalign = 0.5f;
 
-            TreeModelSort sortable = new TreeModelSort(store);
+            //_filter = new TreeModelFilter(sortable, null);
+            _filter = new TreeModelFilter(store, null);
+            
+            _filter.VisibleFunc = FilterByName;
+            
+            TreeModelSort sortable = new TreeModelSort(_filter);
             sortable.SetSortFunc(0, IdSortFunc);
             sortable.SetSortFunc(1, ProcessNameSortFunc);
             sortable.SetSortFunc(2, WorkingSetSortFunc);
@@ -111,14 +116,10 @@ namespace TestGtk
             sortable.SetSortFunc(7, CpuUsageSortFunc);
             sortable.SetSortFunc(8, ThreadCountFunc);
             sortable.SetSortFunc(9, StartTimeSortFunc);
-
-            _filter = new TreeModelFilter(sortable, null);
-            //_filter = new TreeModelFilter(store, null);
-            _filter.VisibleFunc = FilterByName;
             
             tree = new TreeView();
-            //tree.Model = sortable;
-            tree.Model = _filter;
+            tree.Model = sortable;
+            //tree.Model = _filter;
 
             _updater.ColumnToSort[1] = null;
             for (int i = 0; i < 10; i++)
