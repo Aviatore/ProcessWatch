@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Timers;
+using Cairo;
 using Gtk;
-using System.Diagnostics;
+using GLib;
+using Application = Gtk.Application;
+using Process = System.Diagnostics.Process;
 
 
 namespace TestGtk
@@ -18,9 +22,12 @@ namespace TestGtk
         private string[] _filtrationOptions;
         private HBox _filtrationHBox;
         private Entry _entry;
+        private StringBuilder _searchPattern;
+        private TreeModelFilter _filter;
 
         public WindowBuilder()
         {
+            _searchPattern = new StringBuilder();
             _updater = new ProcessGrabber();
             _processIdToKill = new List<int>();
             store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
@@ -105,11 +112,13 @@ namespace TestGtk
             sortable.SetSortFunc(8, ThreadCountFunc);
             sortable.SetSortFunc(9, StartTimeSortFunc);
 
-            TreeModelFilter filter = new TreeModelFilter(sortable, null);
-            
+            _filter = new TreeModelFilter(sortable, null);
+            //_filter = new TreeModelFilter(store, null);
+            _filter.VisibleFunc = FilterByName;
             
             tree = new TreeView();
-            tree.Model = sortable;
+            //tree.Model = sortable;
+            tree.Model = _filter;
 
             _updater.ColumnToSort[1] = null;
             for (int i = 0; i < 10; i++)
@@ -238,13 +247,42 @@ namespace TestGtk
 
         private void FilterByProcessName()
         {
+            _entry.Changed += OnChanged;
             _filtrationHBox.PackStart(_entry, false, false, 0);
             _filtrationHBox.ShowAll();
         }
 
         private void FilterShowAll()
         {
+            _entry.Text = "";
+            _entry.Changed -= OnChanged;
             _filtrationHBox.Remove(_entry);
+        }
+
+        //[ConnectBefore]
+        private void OnChanged(object sender, EventArgs args)
+        {
+            _filter.Refilter();
+        }
+
+        private bool FilterByName(ITreeModel model, TreeIter iter)
+        {
+            try
+            {
+                string processName = model.GetValue(iter, 1).ToString();
+
+                if (_entry.Text == "")
+                    return true;
+
+                if (processName.IndexOf(_entry.Text) > -1)
+                    return true;
+                
+                return false;
+            }
+            catch (NullReferenceException e)
+            {
+                return false;
+            }
         }
 
         private int? SortOrderToInt(SortType? sortType=null)
