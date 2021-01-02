@@ -94,9 +94,7 @@ namespace TestGtk
                 "Filter by PID",
                 "Filter by Process Name",
                 "Filter by Memory Usage",
-                "Filter by Priority",
                 "Filter by CPU usage",
-                "Filter by Start Time"
             };
 
             _FiltrationDirectionOptions = new[]
@@ -466,7 +464,7 @@ namespace TestGtk
             {
                 string processName = model.GetValue(iter, _columnFilter).ToString();
                 
-                if (_textToFilter == "")
+                if (_textToFilter == "" || processName == "")
                     return true;
 
                 if (_textToFilter.EndsWith('%'))
@@ -498,7 +496,9 @@ namespace TestGtk
                     string memSize = _textToFilterSplitted[0];
                     string memUnit = _textToFilterSplitted[1];
                     Console.WriteLine($"memSize: {memSize}");
+
                     double memoryUsage = Convert.ToDouble(processName);
+                
 
                     switch (_FiltrationDirectionOptions[_memoryFiltrationDirectionComboBox.Active])
                     {
