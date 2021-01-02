@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Timers;
 using Cairo;
@@ -28,8 +29,15 @@ namespace TestGtk
         private Entry _memoryFiltrationEntry;
         private ComboBox _memoryFiltrationDirectionComboBox;
         private ComboBox _memoryFiltrationUnitsComboBox;
-        private string[] _memoryFiltrationDirectionOptions;
+        private string[] _FiltrationDirectionOptions;
         private string[] _memoryFiltrationDirectionUnits;
+        
+        private HBox _cpuFiltrationHbox;
+        private Entry _cpuFiltrationEntry;
+        private ComboBox _cpuFiltrationDirectionComboBox;
+        private string[] _cpuFiltrationDirectionOptions;
+        private Label _cpuFiltrationLabel;
+        
         
         //private SpinButton _numericalEntry;
         private StringBuilder _searchPattern;
@@ -91,7 +99,7 @@ namespace TestGtk
                 "Filter by Start Time"
             };
 
-            _memoryFiltrationDirectionOptions = new[]
+            _FiltrationDirectionOptions = new[]
             {
                 ">",
                 "≥",
@@ -114,13 +122,26 @@ namespace TestGtk
             _memoryFiltrationEntry.WidthChars = 7;
             _memoryFiltrationEntry.Changed += OnChanged;
             _memoryFiltrationEntry.TextInserted += OnlyNumerical;
-            _memoryFiltrationDirectionComboBox = new ComboBox(_memoryFiltrationDirectionOptions);
+            _memoryFiltrationDirectionComboBox = new ComboBox(_FiltrationDirectionOptions);
             _memoryFiltrationDirectionComboBox.Changed += OnChanged;
             _memoryFiltrationUnitsComboBox = new ComboBox(_memoryFiltrationDirectionUnits);
             _memoryFiltrationUnitsComboBox.Changed += OnChanged;
             _memoryFiltrationHbox.PackStart(_memoryFiltrationDirectionComboBox, false, false, 0);
             _memoryFiltrationHbox.PackStart(_memoryFiltrationEntry, false, false, 0);
             _memoryFiltrationHbox.PackStart(_memoryFiltrationUnitsComboBox, false, false, 0);
+
+            _cpuFiltrationHbox = new HBox();
+            _cpuFiltrationEntry = new Entry();
+            _cpuFiltrationEntry.MaxWidthChars = 7;
+            _cpuFiltrationEntry.WidthChars = 7;
+            _cpuFiltrationEntry.Changed += OnChanged;
+            _cpuFiltrationEntry.TextInserted += OnlyNumerical;
+            _cpuFiltrationDirectionComboBox = new ComboBox(_FiltrationDirectionOptions);
+            _cpuFiltrationDirectionComboBox.Changed += OnChanged;
+            _cpuFiltrationLabel = new Label("%"); 
+            _cpuFiltrationHbox.PackStart(_cpuFiltrationDirectionComboBox, false, false, 0);
+            _cpuFiltrationHbox.PackStart(_cpuFiltrationEntry, false, false, 0);
+            _cpuFiltrationHbox.PackStart(_cpuFiltrationLabel, false, false, 0);
             
             ComboBox filtrationCombo = new ComboBox(_filtrationOptions);
             filtrationCombo.Changed += ComboOnChanged;
@@ -307,6 +328,10 @@ namespace TestGtk
                     _columnFilter = 2;
                     ShowFilterWidgets(_memoryFiltrationHbox);
                     break;
+                case "Filter by CPU usage":
+                    _columnFilter = 7;
+                    ShowFilterWidgets(_cpuFiltrationHbox);
+                    break;
             }
         }
 
@@ -360,6 +385,8 @@ namespace TestGtk
         {
             _entry.Text = "";
             _numericalEntry.Text = "";
+            _memoryFiltrationEntry.Text = "";
+            _cpuFiltrationEntry.Text = "";
             
             _filtrationHBox.Foreach(widget =>
             {
@@ -373,6 +400,8 @@ namespace TestGtk
         //[ConnectBefore]
         private void OnChanged(object sender, EventArgs args)
         {
+            bool filter = true;
+            
             switch (_columnFilter)
             {
                 case 0:
@@ -382,9 +411,17 @@ namespace TestGtk
                     _textToFilter = _entry.Text;
                     break;
                 case 2:
-                    if (_memoryFiltrationUnitsComboBox.Active > -1 && _memoryFiltrationEntry.Text != "")
+                    if (_memoryFiltrationUnitsComboBox.Active > -1 && _memoryFiltrationDirectionComboBox.Active > -1 && 
+                        _memoryFiltrationEntry.Text != "" && Char.IsNumber(_memoryFiltrationEntry.Text.Last()))
                         _textToFilter =
                             $"{_memoryFiltrationEntry.Text} {_memoryFiltrationDirectionUnits[_memoryFiltrationUnitsComboBox.Active]}";
+                    else
+                        _textToFilter = "";
+                    break;
+                case 7:
+                    if (_cpuFiltrationDirectionComboBox.Active > -1 && _cpuFiltrationEntry.Text != "" && Char.IsNumber(_cpuFiltrationEntry.Text.Last()))
+                        _textToFilter =
+                            $"{_cpuFiltrationEntry.Text} %";
                     else
                         _textToFilter = "";
                     break;
@@ -434,7 +471,25 @@ namespace TestGtk
 
                 if (_textToFilter.EndsWith('%'))
                 {
+                    string[] _textToFilterSplitted = _textToFilter.Split(" ");
+                    double userInput = Convert.ToDouble(_textToFilterSplitted[0]);
+                    double cpuUsage = Convert.ToDouble(processName);
                     
+                    switch (_FiltrationDirectionOptions[_cpuFiltrationDirectionComboBox.Active])
+                    {
+                        case ">":
+                            return cpuUsage > userInput;
+                        case "≥":
+                            return cpuUsage >= userInput;
+                        case "=":
+                            return cpuUsage == userInput;
+                        case "≤":
+                            return cpuUsage <= userInput;
+                        case "<":
+                            return cpuUsage < userInput;
+                        default:
+                            return true;
+                    }
                 }
                 
                 if (_textToFilter.EndsWith('B'))
@@ -442,9 +497,10 @@ namespace TestGtk
                     string[] _textToFilterSplitted = _textToFilter.Split(" ");
                     string memSize = _textToFilterSplitted[0];
                     string memUnit = _textToFilterSplitted[1];
+                    Console.WriteLine($"memSize: {memSize}");
                     double memoryUsage = Convert.ToDouble(processName);
 
-                    switch (_memoryFiltrationDirectionOptions[_memoryFiltrationDirectionComboBox.Active])
+                    switch (_FiltrationDirectionOptions[_memoryFiltrationDirectionComboBox.Active])
                     {
                         case ">":
                             return memoryUsage > MemSizeToRaw(memSize, memUnit);
@@ -456,6 +512,8 @@ namespace TestGtk
                             return memoryUsage <= MemSizeToRaw(memSize, memUnit);
                         case "<":
                             return memoryUsage < MemSizeToRaw(memSize, memUnit);
+                        default:
+                            return true;
                     }
                 }
 
