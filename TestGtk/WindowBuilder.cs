@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Timers;
 using Cairo;
+using Gdk;
 using Gtk;
 using GLib;
 using Application = Gtk.Application;
 using Process = System.Diagnostics.Process;
+using Window = Gtk.Window;
 
 
 namespace TestGtk
@@ -35,7 +37,6 @@ namespace TestGtk
         private HBox _cpuFiltrationHbox;
         private Entry _cpuFiltrationEntry;
         private ComboBox _cpuFiltrationDirectionComboBox;
-        private string[] _cpuFiltrationDirectionOptions;
         private Label _cpuFiltrationLabel;
         
         
@@ -57,12 +58,44 @@ namespace TestGtk
             store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
                 typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
             Window window;
+            
 
             Application.Init ();
             
             window = new Window ("Label sample");
+            
+            AboutDialog aboutDialog;
+            aboutDialog = new AboutDialog();
+            aboutDialog.Title = "About Process Watch";
+            aboutDialog.Authors = new[]
+            {
+                "Wojciech Wesołowski",
+                "Marek Krzysztofiak"
+            };
+            aboutDialog.Copyright = "Copyright \xa9 2012 Codecool";
+            aboutDialog.Version = "v.1.0";
+            aboutDialog.ProgramName = "Process Watch";
+            aboutDialog.Response += (o, args) =>
+            {
+                switch (args.ResponseId)
+                {
+                    case ResponseType.DeleteEvent:
+                        aboutDialog.Hide();
+                        break;
+                    case ResponseType.Cancel:
+                        aboutDialog.Hide();
+                        break;
+                }
+            };
+            aboutDialog.Comments = "Process Watch is a simple and intuitive process manager\n" +
+                                   "that allows to inspect all running processes and eventually kill them.";
+            aboutDialog.Logo = new Pixbuf("processIconSmall.png");
+            aboutDialog.TransientFor = window;
+
+
             window.Resize(500, 600);
-            window.Title = "Label";
+            window.Title = "Process Watch";
+            window.SetIconFromFile("processIconSmall.png");
             window.BorderWidth = 5;
             
             window.DeleteEvent += delete_event;
@@ -76,9 +109,22 @@ namespace TestGtk
             
             Button button2 = new Button("Stop");
             button2.Clicked += Stop;
+
+            Button aboutButton = new Button();
+            Image aboutIcon = new Image();
+            aboutIcon.Pixbuf = new Pixbuf("information.png");
+            
+            //aboutButton.Image = new Image(Stock.Info, IconSize.Button);
+            aboutButton.Image = aboutIcon;
+            aboutButton.Clicked += (sender, args) =>
+            {
+                aboutDialog.Show();
+            }; 
+            
             
             hbox.PackStart(button, false, false, 0);
             hbox.PackStart(button2, false, false, 0);
+            hbox.PackEnd(aboutButton, false, false, 0);
 
             _filtrationHBox = new HBox(false, 5);
             _entry = new Entry();
@@ -398,8 +444,6 @@ namespace TestGtk
         //[ConnectBefore]
         private void OnChanged(object sender, EventArgs args)
         {
-            bool filter = true;
-            
             switch (_columnFilter)
             {
                 case 0:
