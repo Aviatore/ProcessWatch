@@ -23,6 +23,14 @@ namespace TestGtk
         private HBox _filtrationHBox;
         private Entry _entry;
         private Entry _numericalEntry;
+
+        private HBox _memoryFiltrationHbox;
+        private Entry _memoryFiltrationEntry;
+        private ComboBox _memoryFiltrationDirectionComboBox;
+        private ComboBox _memoryFiltrationUnitsComboBox;
+        private string[] _memoryFiltrationDirectionOptions;
+        private string[] _memoryFiltrationDirectionUnits;
+        
         //private SpinButton _numericalEntry;
         private StringBuilder _searchPattern;
         private TreeModelFilter _filter;
@@ -82,6 +90,38 @@ namespace TestGtk
                 "Filter by CPU usage",
                 "Filter by Start Time"
             };
+
+            _memoryFiltrationDirectionOptions = new[]
+            {
+                ">",
+                "≥",
+                "=",
+                "≤",
+                "<"
+            };
+
+            _memoryFiltrationDirectionUnits = new[]
+            {
+                "B",
+                "KB",
+                "MB",
+                "GB"
+            };
+
+            _memoryFiltrationHbox = new HBox();
+            _memoryFiltrationEntry = new Entry();
+            _memoryFiltrationEntry.MaxWidthChars = 7;
+            _memoryFiltrationEntry.WidthChars = 7;
+            _memoryFiltrationEntry.Changed += OnChanged;
+            _memoryFiltrationEntry.TextInserted += OnlyNumerical;
+            _memoryFiltrationDirectionComboBox = new ComboBox(_memoryFiltrationDirectionOptions);
+            _memoryFiltrationDirectionComboBox.Changed += OnChanged;
+            _memoryFiltrationUnitsComboBox = new ComboBox(_memoryFiltrationDirectionUnits);
+            _memoryFiltrationUnitsComboBox.Changed += OnChanged;
+            _memoryFiltrationHbox.PackStart(_memoryFiltrationDirectionComboBox, false, false, 0);
+            _memoryFiltrationHbox.PackStart(_memoryFiltrationEntry, false, false, 0);
+            _memoryFiltrationHbox.PackStart(_memoryFiltrationUnitsComboBox, false, false, 0);
+            
             ComboBox filtrationCombo = new ComboBox(_filtrationOptions);
             filtrationCombo.Changed += ComboOnChanged;
             _filtrationHBox.PackStart(filtrationCombo, false, false, 0);
@@ -255,13 +295,26 @@ namespace TestGtk
                     break;
                 case "Filter by PID":
                     _columnFilter = 0;
-                    FilterByIdShowEntry();
+                    //FilterByIdShowEntry();
+                    ShowFilterWidgets(_numericalEntry);
                     break;
                 case "Filter by Process Name":
                     _columnFilter = 1;
-                    FilterByNameShowEntry();
+                    //FilterByNameShowEntry();
+                    ShowFilterWidgets(_entry);
+                    break;
+                case "Filter by Memory Usage":
+                    _columnFilter = 2;
+                    ShowFilterWidgets(_memoryFiltrationHbox);
                     break;
             }
+        }
+
+        private void ShowFilterWidgets(Widget widget)
+        {
+            HideAllEntryWidgets();
+            _filtrationHBox.PackStart(widget, false, false, 0);
+            _filtrationHBox.ShowAll();
         }
 
         private void FilterByNameShowEntry()
@@ -284,14 +337,17 @@ namespace TestGtk
         private void OnlyNumerical(object sender, TextInsertedArgs args)
         {
             Entry entry = (Entry) sender;
-            Console.WriteLine($"input: {args.Position} real: {entry.Text}");
+            Console.WriteLine($"input: {args.Position} real: {entry.Text} newText: {args.NewText}");
             
-            char inputKey = Convert.ToChar(args.NewText);
-            int inputKeyPosition = Convert.ToInt32(args.Position);
-            
-            if (!Char.IsNumber(inputKey))
+            if (args.NewText.Length == 1)
             {
-                entry.Text = entry.Text.Remove(inputKeyPosition - 1);
+                char inputKey = Convert.ToChar(args.NewText);
+                int inputKeyPosition = Convert.ToInt32(args.Position);
+
+                if (!Char.IsNumber(inputKey) && inputKey != '.')
+                {
+                    entry.Text = entry.Text.Remove(inputKeyPosition - 1);
+                }
             }
         }
 
@@ -325,9 +381,46 @@ namespace TestGtk
                 case 1: 
                     _textToFilter = _entry.Text;
                     break;
+                case 2:
+                    if (_memoryFiltrationUnitsComboBox.Active > -1 && _memoryFiltrationEntry.Text != "")
+                        _textToFilter =
+                            $"{_memoryFiltrationEntry.Text} {_memoryFiltrationDirectionUnits[_memoryFiltrationUnitsComboBox.Active]}";
+                    else
+                        _textToFilter = "";
+                    break;
             }
             
             _filter.Refilter();
+        }
+
+        private double FormatMemSize(string size)
+        {
+            double d = Convert.ToDouble(size);
+            
+            int i = 0;
+            while ((d > 1024) && (i < 5))
+            {
+                d /= 1024;
+                i++;
+            }
+
+            return Math.Round(d, 2);
+        }
+        
+        private double MemSizeToRaw(string size, string unit)
+        {
+            string[] units = { "TB", "GB", "MB", "KB", "B" };
+
+            double sizeDouble = Convert.ToDouble(size);
+            
+            int i = Array.IndexOf(units, unit);
+            while (i < units.Length - 1)
+            {
+                sizeDouble *= 1024;
+                i++;
+            }
+
+            return sizeDouble;
         }
 
         private bool FilterByName(ITreeModel model, TreeIter iter)
@@ -338,6 +431,33 @@ namespace TestGtk
                 
                 if (_textToFilter == "")
                     return true;
+
+                if (_textToFilter.EndsWith('%'))
+                {
+                    
+                }
+                
+                if (_textToFilter.EndsWith('B'))
+                {
+                    string[] _textToFilterSplitted = _textToFilter.Split(" ");
+                    string memSize = _textToFilterSplitted[0];
+                    string memUnit = _textToFilterSplitted[1];
+                    double memoryUsage = Convert.ToDouble(processName);
+
+                    switch (_memoryFiltrationDirectionOptions[_memoryFiltrationDirectionComboBox.Active])
+                    {
+                        case ">":
+                            return memoryUsage > MemSizeToRaw(memSize, memUnit);
+                        case "≥":
+                            return memoryUsage >= MemSizeToRaw(memSize, memUnit);
+                        case "=":
+                            return memoryUsage == MemSizeToRaw(memSize, memUnit);
+                        case "≤":
+                            return memoryUsage <= MemSizeToRaw(memSize, memUnit);
+                        case "<":
+                            return memoryUsage < MemSizeToRaw(memSize, memUnit);
+                    }
+                }
 
                 if (processName.IndexOf(_textToFilter) > -1)
                     return true;
