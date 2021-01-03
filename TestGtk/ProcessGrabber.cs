@@ -43,7 +43,7 @@ namespace TestGtk
         
         private void GetData(object source=null, ElapsedEventArgs args=null)
         {
-            //Console.WriteLine("ok");
+            Console.WriteLine("tick");
             List<string> output = new List<string>();
             ProcessMod[] processes = ProcessMod.GetProcesses();
             //IEnumerable<ProcessMod> processesSorted = processes.OrderByDescending(process => process.CpuUsage).Take(15);

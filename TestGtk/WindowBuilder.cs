@@ -44,6 +44,8 @@ namespace TestGtk
         private StringBuilder _searchPattern;
         private TreeModelFilter _filter;
         private string _textToFilter;
+        
+        private Window _window;
 
         private int _columnFilter;
         //private bool FilterById(ITreeModel model, TreeIter iter)
@@ -57,13 +59,11 @@ namespace TestGtk
             _processIdToKill = new List<int>();
             store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
                 typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
-            Window window;
-            
 
-            Application.Init ();
+            Application.Init();
             
-            window = new Window ("Label sample");
-            
+            _window = new Window ("Label sample");
+
             AboutDialog aboutDialog;
             aboutDialog = new AboutDialog();
             aboutDialog.Title = "About Process Watch";
@@ -90,15 +90,15 @@ namespace TestGtk
             aboutDialog.Comments = "Process Watch is a simple and intuitive process manager\n" +
                                    "that allows to inspect all running processes and eventually kill them.";
             aboutDialog.Logo = new Pixbuf("icons/processIconSmall.png");
-            aboutDialog.TransientFor = window;
+            aboutDialog.TransientFor = _window;
 
 
-            window.Resize(1300, 600);
-            window.Title = "Process Watch";
-            window.SetIconFromFile("icons/processIconSmall.png");
-            window.BorderWidth = 5;
+            _window.Resize(1300, 600);
+            _window.Title = "Process Watch";
+            _window.SetIconFromFile("icons/processIconSmall.png");
+            _window.BorderWidth = 5;
             
-            window.DeleteEvent += delete_event;
+            _window.DeleteEvent += delete_event;
             
             HBox hbox = new HBox (false, 5);
             
@@ -205,7 +205,7 @@ namespace TestGtk
             filtrationCombo.Changed += ComboOnChanged;
             _filtrationHBox.PackStart(filtrationCombo, false, false, 0);
 
-            window.Add (vbox);
+            _window.Add (vbox);
             vbox.PackStart (hbox, false, false, 0);
             vbox.PackStart(_filtrationHBox, false, false, 0);
             
@@ -362,7 +362,7 @@ namespace TestGtk
             
 
             tree.ShowAll();
-            window.ShowAll();
+            _window.ShowAll();
             _filtrationHBox.Hide();
         }
 
@@ -461,7 +461,7 @@ namespace TestGtk
         //[ConnectBefore]
         private void OnChanged(object sender, EventArgs args)
         {
-            tree.Selection.UnselectAll();
+            //tree.Selection.UnselectAll();
             
             switch (_columnFilter)
             {
@@ -973,14 +973,44 @@ namespace TestGtk
 
         private void KillProcess(object o, EventArgs args)
         {
-            foreach (var id in _processIdToKill)
+            using (KillDialog killDialog = new KillDialog(_window, DialogFlags.Modal, MessageType.Warning, ButtonsType.YesNo, null))
             {
-                Process process = Process.GetProcessById(id);
-                Console.WriteLine($"{id} killed");
-                process.Kill();
+                int processesToKillCount = _processIdToKill.Count;
+
+                if (processesToKillCount == 0)
+                    return;
+                if (processesToKillCount == 1)
+                {
+                    int processId = _processIdToKill[0];
+                    Process process = Process.GetProcessById(processId);
+                    killDialog.Text =
+                        $"Are you sure you want to end the selected process \"{process.ProcessName}\" (PID: {processId.ToString()})?";
+                    process.Dispose();
+                }
+                else
+                {
+                    killDialog.Text =
+                        $"Are you sure you want to end the {processesToKillCount.ToString()} selected processes?";
+                }
+                
+                var response = killDialog.Run();
+
+                if (response == -8)
+                {
+                    foreach (var id in _processIdToKill)
+                    {
+                        Process process = Process.GetProcessById(id);
+                        Console.WriteLine($"{id} killed");
+                        process.Kill();
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Abort killing.");
+                }
             }
             
-            _updater.Run();
+            //_updater.Run();
         }
 
         private void LoadStore(List<ProcessMod> element)
@@ -1062,7 +1092,7 @@ namespace TestGtk
                 for (int i = 0; i < selectedRows.Length; i++)
                 {
                     filtered.GetIter(out iter, selectedRows[i]);
-                    Console.WriteLine($"{filtered.GetValue(iter, 0)} {filtered.GetValue(iter, 1)}");
+                    //Console.WriteLine($"{filtered.GetValue(iter, 0)} {filtered.GetValue(iter, 1)}");
 
                     int id;
                     int.TryParse(filtered.GetValue(iter, 0).ToString(), out id);
@@ -1071,17 +1101,19 @@ namespace TestGtk
                         _processIdToKill.Add(id);
                     }
                 }
-                _updater.Stop();
+                //_updater.Stop();
             }
             else
             {
                 Console.WriteLine("Node is null.");
             }
 
+            /*
             foreach (var element in _processIdToKill)
             {
                 Console.WriteLine($"{element} added.");
             }
+            */
         }
  
         static void exitbutton_event (object obj, EventArgs args)
@@ -1094,5 +1126,14 @@ namespace TestGtk
             Application.Run();
         }
         
+    }
+
+    class KillDialog : MessageDialog
+    {
+        private string _secondaryText = "Killing a process may destroy data, break the session or introduce a security risk. Only unresponsive processes should be killed.";
+        public KillDialog(Window window, DialogFlags flag, MessageType messageType, ButtonsType buttonType, string format) : base(window, flag, messageType, buttonType, format)
+        {
+            SecondaryText = _secondaryText;
+        }
     }
 }
