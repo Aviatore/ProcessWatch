@@ -89,13 +89,13 @@ namespace TestGtk
             };
             aboutDialog.Comments = "Process Watch is a simple and intuitive process manager\n" +
                                    "that allows to inspect all running processes and eventually kill them.";
-            aboutDialog.Logo = new Pixbuf("processIconSmall.png");
+            aboutDialog.Logo = new Pixbuf("icons/processIconSmall.png");
             aboutDialog.TransientFor = window;
 
 
             window.Resize(500, 600);
             window.Title = "Process Watch";
-            window.SetIconFromFile("processIconSmall.png");
+            window.SetIconFromFile("icons/processIconSmall.png");
             window.BorderWidth = 5;
             
             window.DeleteEvent += delete_event;
@@ -112,21 +112,35 @@ namespace TestGtk
 
             Button aboutButton = new Button();
             Image aboutIcon = new Image();
-            aboutIcon.Pixbuf = new Pixbuf("information.png");
+            aboutIcon.Pixbuf = new Pixbuf("icons/information.png");
             
             //aboutButton.Image = new Image(Stock.Info, IconSize.Button);
             aboutButton.Image = aboutIcon;
+            aboutButton.TooltipText = "About Process Watch";
             aboutButton.Clicked += (sender, args) =>
             {
                 aboutDialog.Show();
-            }; 
-            
+            };
+
+            Button filterButton = new Button();
+            filterButton.Image = new Image(Stock.Find, IconSize.Button);
+            filterButton.TooltipText = "Filtration utilities";
             
             hbox.PackStart(button, false, false, 0);
             hbox.PackStart(button2, false, false, 0);
             hbox.PackEnd(aboutButton, false, false, 0);
+            hbox.PackEnd(filterButton, false, false, 0);
 
             _filtrationHBox = new HBox(false, 5);
+            
+            filterButton.Clicked += (sender, args) =>
+            {
+                if (_filtrationHBox.IsVisible)
+                    _filtrationHBox.Hide();
+                else
+                    _filtrationHBox.ShowAll();
+            };
+            
             _entry = new Entry();
             _entry.Changed += OnChanged;
             _numericalEntry = new Entry();
@@ -347,6 +361,7 @@ namespace TestGtk
 
             tree.ShowAll();
             window.ShowAll();
+            _filtrationHBox.Hide();
         }
 
         private void ComboOnChanged(object sender, EventArgs args)
