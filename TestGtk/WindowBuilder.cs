@@ -2,11 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Timers;
-using Cairo;
 using Gdk;
 using Gtk;
-using GLib;
 using Application = Gtk.Application;
 using Process = System.Diagnostics.Process;
 using Window = Gtk.Window;
@@ -16,45 +13,38 @@ namespace TestGtk
 {
     public class WindowBuilder
     {
-        private static ProcessGrabber _updater;
-        private static ListStore store;
-        private TreeView tree;
-        private ScrolledWindow scrolledWindow;
-        private double _currentScrollPosition;
-        private List<int> _processIdToKill;
-        private string[] _filtrationOptions;
-        private HBox _filtrationHBox;
-        private Entry _entry;
-        private Entry _numericalEntry;
-
-        private HBox _memoryFiltrationHbox;
-        private Entry _memoryFiltrationEntry;
+        private ComboBox _cpuFiltrationDirectionComboBox;
         private ComboBox _memoryFiltrationDirectionComboBox;
         private ComboBox _memoryFiltrationUnitsComboBox;
-        private string[] _FiltrationDirectionOptions;
-        private string[] _memoryFiltrationDirectionUnits;
-        
-        private HBox _cpuFiltrationHbox;
+        private double _currentScrollPosition;
         private Entry _cpuFiltrationEntry;
-        private ComboBox _cpuFiltrationDirectionComboBox;
+        private Entry _entry;
+        private Entry _memoryFiltrationEntry;
+        private Entry _numericalEntry;
+        private HBox _cpuFiltrationHbox;
+        private HBox _filtrationHBox;
+        private HBox _memoryFiltrationHbox;
         private Label _cpuFiltrationLabel;
+        private List<int> _processIdToKill;
+        private ScrolledWindow scrolledWindow;
+        private static ListStore store;
+        private static ProcessGrabber _updater;
+        private string[] _FiltrationDirectionOptions;
+        private string[] _filtrationOptions;
+        private string[] _memoryFiltrationDirectionUnits;
+        private TreeView tree;
         
-        
-        //private SpinButton _numericalEntry;
-        private StringBuilder _searchPattern;
         private TreeModelFilter _filter;
         private string _textToFilter;
         
         private Window _window;
 
         private int _columnFilter;
-        //private bool FilterById(ITreeModel model, TreeIter iter)
 
         public WindowBuilder()
         {
             _columnFilter = 0;
             _textToFilter = "";
-            _searchPattern = new StringBuilder();
             _updater = new ProcessGrabber();
             _processIdToKill = new List<int>();
             store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
@@ -103,18 +93,11 @@ namespace TestGtk
             HBox hbox = new HBox (false, 5);
             
             VBox vbox = new VBox (false, 5);
-            
-            Button button = new Button("Start");
-            button.Clicked += Start;
-            
-            Button button2 = new Button("Stop");
-            button2.Clicked += Stop;
 
             Button aboutButton = new Button();
             Image aboutIcon = new Image();
             aboutIcon.Pixbuf = new Pixbuf("icons/information.png");
             
-            //aboutButton.Image = new Image(Stock.Info, IconSize.Button);
             aboutButton.Image = aboutIcon;
             aboutButton.TooltipText = "About Process Watch";
             aboutButton.Clicked += (sender, args) =>
@@ -126,8 +109,6 @@ namespace TestGtk
             filterButton.Image = new Image(Stock.Find, IconSize.Button);
             filterButton.TooltipText = "Filtration utilities";
             
-            //hbox.PackStart(button, false, false, 0);
-            //hbox.PackStart(button2, false, false, 0);
             hbox.PackEnd(aboutButton, false, false, 0);
             hbox.PackEnd(filterButton, false, false, 0);
 
@@ -144,7 +125,6 @@ namespace TestGtk
             _entry = new Entry();
             _entry.Changed += OnChanged;
             _numericalEntry = new Entry();
-            //_numericalEntry = new SpinButton(1, 9999999, 1);
             _numericalEntry.Changed += OnChanged;
             _numericalEntry.TextInserted += OnlyNumerical;
 
@@ -267,7 +247,7 @@ namespace TestGtk
                 var i1 = i;
                 column.Clicked += (sender, args) =>
                 {
-                    Console.WriteLine(column.SortOrder);
+                    //Console.WriteLine(column.SortOrder);
                     _updater.ColumnToSort[0] = i1;
                     _updater.ColumnToSort[1] = SortOrderToInt();
                 }; 
@@ -321,7 +301,7 @@ namespace TestGtk
                     _currentScrollPosition = tree.Vadjustment.Value;
                     StoreClear();
                     LoadStore(list);
-                    
+
                     tree.ShowAll();
                 });
             };
@@ -403,7 +383,7 @@ namespace TestGtk
         private void OnlyNumerical(object sender, TextInsertedArgs args)
         {
             Entry entry = (Entry) sender;
-            Console.WriteLine($"input: {args.Position} real: {entry.Text} newText: {args.NewText}");
+            //Console.WriteLine($"input: {args.Position} real: {entry.Text} newText: {args.NewText}");
             
             if (args.NewText.Length == 1)
             {
@@ -960,22 +940,28 @@ namespace TestGtk
                     killDialog.Text =
                         $"Are you sure you want to end the {processesToKillCount.ToString()} selected processes?";
                 }
-                
-                var response = killDialog.Run();
 
-                if (response == -8)
+                killDialog.Response += (o1, responseArgs) =>
                 {
-                    foreach (var id in _processIdToKill)
+                    switch (responseArgs.ResponseId)
                     {
-                        Process process = Process.GetProcessById(id);
-                        Console.WriteLine($"{id} killed");
-                        process.Kill();
+                        case ResponseType.Yes:
+                            foreach (var id in _processIdToKill)
+                            {
+                                Process process = Process.GetProcessById(id);
+                                Console.WriteLine($"{id.ToString()} killed");
+                                process.Kill();
+                                process.Dispose();
+                            }
+
+                            break;
+                        case ResponseType.No:
+                            Console.WriteLine("Abort killing.");
+                            break;
                     }
-                }
-                else
-                {
-                    Console.WriteLine("Abort killing.");
-                }
+                };
+                
+                killDialog.Run();
             }
         }
 
@@ -1072,12 +1058,7 @@ namespace TestGtk
                 Console.WriteLine("Node is null.");
             }
         }
- 
-        static void exitbutton_event (object obj, EventArgs args)
-        {
-            Application.Quit();
-        }
-        
+
         public void Run()
         {
             Application.Run();
