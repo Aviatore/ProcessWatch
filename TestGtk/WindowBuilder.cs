@@ -358,6 +358,8 @@ namespace TestGtk
             //tree.NodeStore = store;
             tree.Selection.Mode = SelectionMode.Multiple;
             tree.Selection.Changed += OnSelectionChanged;
+            
+            
 
             tree.ShowAll();
             window.ShowAll();
@@ -459,6 +461,8 @@ namespace TestGtk
         //[ConnectBefore]
         private void OnChanged(object sender, EventArgs args)
         {
+            tree.Selection.UnselectAll();
+            
             switch (_columnFilter)
             {
                 case 0:
@@ -1047,7 +1051,9 @@ namespace TestGtk
         void OnSelectionChanged(object o, EventArgs args)
         {
             TreeSelection selection = (TreeSelection)o;
-            TreePath[] selectedRows = selection.GetSelectedRows();
+            ITreeModel filtered;
+            TreePath[] selectedRows = selection.GetSelectedRows(out filtered);
+            
 
             _processIdToKill.Clear();
             TreeIter iter;
@@ -1055,11 +1061,11 @@ namespace TestGtk
             {
                 for (int i = 0; i < selectedRows.Length; i++)
                 {
-                    store.GetIter(out iter, selectedRows[i]);
-                    Console.WriteLine(store.GetValue(iter, 1));
+                    filtered.GetIter(out iter, selectedRows[i]);
+                    Console.WriteLine($"{filtered.GetValue(iter, 0)} {filtered.GetValue(iter, 1)}");
 
                     int id;
-                    int.TryParse(store.GetValue(iter, 1).ToString(), out id);
+                    int.TryParse(filtered.GetValue(iter, 0).ToString(), out id);
                     if (id != 0)
                     {
                         _processIdToKill.Add(id);
