@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gdk;
 using Gtk;
+using TestGtk.Controller;
+using TestGtk.Model;
 using Application = Gtk.Application;
 using Process = System.Diagnostics.Process;
 using Window = Gtk.Window;
 
 
-namespace TestGtk
+namespace TestGtk.View
 {
     public class WindowBuilder
     {
@@ -229,8 +230,7 @@ namespace TestGtk
             
             tree = new TreeView();
             tree.Model = sortable;
-
-            _updater.ColumnToSort[1] = null;
+            
             for (int i = 0; i < 10; i++)
             {
                 TreeViewColumn column = new TreeViewColumn();
@@ -243,14 +243,6 @@ namespace TestGtk
                 column.SortColumnId = i;
                 column.PackStart(render, true);
                 column.AddAttribute(render, "text", i);
-
-                var i1 = i;
-                column.Clicked += (sender, args) =>
-                {
-                    //Console.WriteLine(column.SortOrder);
-                    _updater.ColumnToSort[0] = i1;
-                    _updater.ColumnToSort[1] = SortOrderToInt();
-                }; 
 
                 switch (i)
                 {
@@ -567,27 +559,6 @@ namespace TestGtk
             {
                 return false;
             }
-        }
-
-        private int? SortOrderToInt(SortType? sortType=null)
-        {
-            if (sortType == SortType.Ascending)
-                return 0;
-            
-            if (sortType == SortType.Descending && _updater.ColumnToSort[1] == 0)
-                return 1;
-
-            if (_updater.ColumnToSort[1] == null)
-            {
-                return 0;
-            }
-
-            if (_updater.ColumnToSort[1] == 0)
-            {
-                return 1;
-            }
-            
-            return null;
         }
 
         private void WorkingSetFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)

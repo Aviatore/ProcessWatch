@@ -1,6 +1,8 @@
 ﻿//using Gtk;
 
 
+using TestGtk.View;
+
 namespace TestGtk
 {
     class Program

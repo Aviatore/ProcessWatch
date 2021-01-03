@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
+using System.Threading.Tasks;
 
-namespace TestGtk
+namespace TestGtk.Model
 {
     public class ProcessMod
     {

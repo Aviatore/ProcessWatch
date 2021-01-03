@@ -1,6 +1,6 @@
 using Gtk;
 
-namespace TestGtk
+namespace TestGtk.View
 {
     public class WindowBuilderHelper
     {
