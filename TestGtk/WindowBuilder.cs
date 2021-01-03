@@ -93,7 +93,7 @@ namespace TestGtk
             aboutDialog.TransientFor = window;
 
 
-            window.Resize(500, 600);
+            window.Resize(1300, 600);
             window.Title = "Process Watch";
             window.SetIconFromFile("icons/processIconSmall.png");
             window.BorderWidth = 5;
@@ -337,7 +337,7 @@ namespace TestGtk
                             ProcessMod.FormatCpuUsage(element.CpuUsage));
                     }
                     */
-                    window.ShowAll();
+                    //window.ShowAll();
                     tree.ShowAll();
                 });
             };
@@ -576,7 +576,7 @@ namespace TestGtk
                     }
                 }
 
-                if (processName.IndexOf(_textToFilter) > -1)
+                if (processName.IndexOf(_textToFilter, StringComparison.CurrentCultureIgnoreCase) > -1)
                     return true;
                 
                 return false;
@@ -986,7 +986,7 @@ namespace TestGtk
             store.GetIterFirst(out iter);
             for (int i = 0; i < store.IterNChildren(); i++)
             {
-                if (element.Count - 1 > i)
+                if (element.Count - 0 > i)
                 {
                     store.SetValues(iter,
                         element[i].Id.ToString(),
