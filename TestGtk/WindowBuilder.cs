@@ -126,8 +126,8 @@ namespace TestGtk
             filterButton.Image = new Image(Stock.Find, IconSize.Button);
             filterButton.TooltipText = "Filtration utilities";
             
-            hbox.PackStart(button, false, false, 0);
-            hbox.PackStart(button2, false, false, 0);
+            //hbox.PackStart(button, false, false, 0);
+            //hbox.PackStart(button2, false, false, 0);
             hbox.PackEnd(aboutButton, false, false, 0);
             hbox.PackEnd(filterButton, false, false, 0);
 
@@ -212,8 +212,7 @@ namespace TestGtk
             Frame frame = new Frame ("Processes");
 
             scrolledWindow = new ScrolledWindow();
-            scrolledWindow.HeightRequest = 400;
-            
+
             VBox processesVBox = new VBox(false, 5);
             
             string[] columnLabels = {
@@ -232,8 +231,7 @@ namespace TestGtk
             CellRendererText render = new CellRendererText();
             render.Alignment = Pango.Alignment.Right;
             render.Xalign = 0.5f;
-
-            //_filter = new TreeModelFilter(sortable, null);
+            
             _filter = new TreeModelFilter(store, null);
             _filter.VisibleFunc = FilterByName;
 
@@ -251,7 +249,6 @@ namespace TestGtk
             
             tree = new TreeView();
             tree.Model = sortable;
-            //tree.Model = _filter;
 
             _updater.ColumnToSort[1] = null;
             for (int i = 0; i < 10; i++)
@@ -309,11 +306,8 @@ namespace TestGtk
             }
             
             scrolledWindow.Add(tree);
-            //processesVBox.PackStart(tree, false, false, 0);
-            
-            frame.Add(scrolledWindow);
 
-            vbox.PackStart(frame, false, false, 0);
+            vbox.PackStart(scrolledWindow, true, true, 0);
 
             Button killButton = new Button("Kill process");
             killButton.Clicked += KillProcess;
@@ -325,19 +319,9 @@ namespace TestGtk
                 Application.Invoke(delegate
                 {
                     _currentScrollPosition = tree.Vadjustment.Value;
-                    //store.Clear();
                     StoreClear();
                     LoadStore(list);
-
-                    /*
-                    foreach (var element in list)
-                    {
-                        store.AppendValues(element.ProcessName, element.Id.ToString(),
-                            ProcessMod.FormatMemSize(element.WorkingSet64),
-                            ProcessMod.FormatCpuUsage(element.CpuUsage));
-                    }
-                    */
-                    //window.ShowAll();
+                    
                     tree.ShowAll();
                 });
             };
@@ -354,8 +338,6 @@ namespace TestGtk
                 store.AppendValues("", "", "", "", "", "", "", "", "", "");
             }
             
-            //tree.NodeSelection.Changed += OnSelectionChanged;
-            //tree.NodeStore = store;
             tree.Selection.Mode = SelectionMode.Multiple;
             tree.Selection.Changed += OnSelectionChanged;
             
@@ -364,6 +346,7 @@ namespace TestGtk
             tree.ShowAll();
             _window.ShowAll();
             _filtrationHBox.Hide();
+            _updater.Run();
         }
 
         private void ComboOnChanged(object sender, EventArgs args)
@@ -377,12 +360,10 @@ namespace TestGtk
                     break;
                 case "Filter by PID":
                     _columnFilter = 0;
-                    //FilterByIdShowEntry();
                     ShowFilterWidgets(_numericalEntry);
                     break;
                 case "Filter by Process Name":
                     _columnFilter = 1;
-                    //FilterByNameShowEntry();
                     ShowFilterWidgets(_entry);
                     break;
                 case "Filter by Memory Usage":
@@ -413,8 +394,7 @@ namespace TestGtk
         private void FilterByIdShowEntry()
         {
             HideAllEntryWidgets();
-            //_numericalEntry.KeyPressEvent += OnlyNumerical;
-            
+
             _filtrationHBox.PackStart(_numericalEntry, false, false, 0);
             _filtrationHBox.ShowAll();
         }
@@ -461,8 +441,6 @@ namespace TestGtk
         //[ConnectBefore]
         private void OnChanged(object sender, EventArgs args)
         {
-            //tree.Selection.UnselectAll();
-            
             switch (_columnFilter)
             {
                 case 0:
@@ -741,7 +719,6 @@ namespace TestGtk
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatCpuUsage(dataDouble);
-                    //((CellRendererText) cell).Text = dataDouble.ToString();
                 }
             }
             catch (Exception e)
@@ -911,13 +888,6 @@ namespace TestGtk
         
         private int TotalCpuTimeSortFunc(ITreeModel model, TreeIter a, TreeIter b)
         {
-            /*
-            if (_updater.ColumnToSort[0] == 6)
-            {
-                Console.WriteLine("wait");
-                return 0;
-            }
-            */
             try
             {
                 string val1 = model.GetValue(a, 6).ToString();
@@ -928,9 +898,7 @@ namespace TestGtk
 
                 int s1 = Convert.ToInt32(val1);
                 int s2 = Convert.ToInt32(val2);
-                
-                //Console.WriteLine($"{val1} {val2} {s1.CompareTo(s2).ToString()}");
-                
+
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -1009,8 +977,6 @@ namespace TestGtk
                     Console.WriteLine("Abort killing.");
                 }
             }
-            
-            //_updater.Run();
         }
 
         private void LoadStore(List<ProcessMod> element)
@@ -1092,7 +1058,6 @@ namespace TestGtk
                 for (int i = 0; i < selectedRows.Length; i++)
                 {
                     filtered.GetIter(out iter, selectedRows[i]);
-                    //Console.WriteLine($"{filtered.GetValue(iter, 0)} {filtered.GetValue(iter, 1)}");
 
                     int id;
                     int.TryParse(filtered.GetValue(iter, 0).ToString(), out id);
@@ -1101,19 +1066,11 @@ namespace TestGtk
                         _processIdToKill.Add(id);
                     }
                 }
-                //_updater.Stop();
             }
             else
             {
                 Console.WriteLine("Node is null.");
             }
-
-            /*
-            foreach (var element in _processIdToKill)
-            {
-                Console.WriteLine($"{element} added.");
-            }
-            */
         }
  
         static void exitbutton_event (object obj, EventArgs args)
@@ -1125,7 +1082,6 @@ namespace TestGtk
         {
             Application.Run();
         }
-        
     }
 
     class KillDialog : MessageDialog
