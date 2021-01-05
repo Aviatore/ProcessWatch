@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Gdk;
 using Gtk;
@@ -14,42 +15,28 @@ namespace TestGtk.View
 {
     public class WindowBuilder
     {
-        private ComboBox _cpuFiltrationDirectionComboBox;
-        private ComboBox _memoryFiltrationDirectionComboBox;
-        private ComboBox _memoryFiltrationUnitsComboBox;
+        private readonly AboutDialog _aboutDialog;
+        private readonly ComboBox _cpuFiltrationDirectionComboBox;
+        private readonly ComboBox _memoryFiltrationDirectionComboBox;
+        private readonly ComboBox _memoryFiltrationUnitsComboBox;
         private double _currentScrollPosition;
-        private Entry _cpuFiltrationEntry;
-        private Entry _processNameEntry;
-        private Entry _memoryFiltrationEntry;
-        private Entry _processIdEntry;
-        private HBox _cpuFiltrationHbox;
-        private HBox _filtrationHBox;
-        private HBox _memoryFiltrationHbox;
-        private HBox _windowHBox;
-        private Label _cpuFiltrationLabel;
-        private List<int> _processIdToKill;
-        private ScrolledWindow _scrolledWindow;
-        private static ListStore _store;
-        private static ProcessGrabber _processGrabber;
-        private string[] _FiltrationDirectionOptions;
-        private string[] _filtrationOptions;
-        private string[] _memoryFiltrationDirectionUnits;
-        private TreeView _treeView;
-        private VBox _windowVBox;
-        private Button _aboutButton;
-        private Image _aboutIcon;
-        private Button _filterButton;
-        private TreeModelFilter _treeModelFilter;
-        private string _textToFilter;
-        private AboutDialog _aboutDialog;
-        private Window _window;
-        private ComboBox _filtrationCombo;
-        private CellRendererText _cellRendererText;
-        private Button _killButton;
-        private TreeModelSort _treeModelSort;
-        private TreeViewColumn _treeViewColumn;
-
+        private readonly Entry _cpuFiltrationEntry;
+        private readonly Entry _memoryFiltrationEntry;
+        private readonly Entry _processIdEntry;
+        private readonly Entry _processNameEntry;
+        private readonly HBox _cpuFiltrationHbox;
+        private readonly HBox _filtrationHBox;
+        private readonly HBox _memoryFiltrationHbox;
         private int _columnFilter;
+        private readonly List<int> _processIdToKill;
+        private static ListStore _listStore;
+        private static ProcessGrabber _processGrabber;
+        private readonly string[] _filtrationDirectionOptions;
+        private readonly string[] _filtrationOptions;
+        private readonly string[] _memoryFiltrationDirectionUnits;
+        private string _textToFilter;
+        private readonly TreeModelFilter _treeModelFilter;
+        private readonly Window _window;
 
         public WindowBuilder()
         {
@@ -57,7 +44,7 @@ namespace TestGtk.View
             _textToFilter = "";
             
             _processIdToKill = new List<int>();
-            _store = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
+            _listStore = new ListStore(typeof(string), typeof(string), typeof(string), typeof(string), 
                 typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
 
             Application.Init();
@@ -68,26 +55,23 @@ namespace TestGtk.View
             _window.SetIconFromFile("icons/processIconSmall.png");
             _window.BorderWidth = 5;
             _window.DeleteEvent += OnWindowClose;
-
             
-            
-
-            _aboutButton = new Button();
-            _aboutIcon = new Image();
-            _aboutIcon.Pixbuf = new Pixbuf("icons/information.png");
-            _aboutButton.Image = _aboutIcon;
-            _aboutButton.TooltipText = "About Process Watch";
-            _aboutButton.Clicked += (sender, args) =>
+            var aboutButton = new Button();
+            var aboutIcon = new Image();
+            aboutIcon.Pixbuf = new Pixbuf("icons/information.png");
+            aboutButton.Image = aboutIcon;
+            aboutButton.TooltipText = "About Process Watch";
+            aboutButton.Clicked += (sender, args) =>
             {
                 _aboutDialog.Show();
             };
             
             _aboutDialog = CreateAboutDialog();
 
-            _filterButton = new Button();
-            _filterButton.Image = new Image(Stock.Find, IconSize.Button);
-            _filterButton.TooltipText = "Filtration utilities";
-            _filterButton.Clicked += (sender, args) =>
+            var filterButton = new Button();
+            filterButton.Image = new Image(Stock.Find, IconSize.Button);
+            filterButton.TooltipText = "Filtration utilities";
+            filterButton.Clicked += (sender, args) =>
             {
                 if (_filtrationHBox.IsVisible)
                     _filtrationHBox.Hide();
@@ -95,9 +79,9 @@ namespace TestGtk.View
                     _filtrationHBox.ShowAll();
             };
             
-            _windowHBox = new HBox (false, 5);
-            _windowHBox.PackEnd(_aboutButton, false, false, 0);
-            _windowHBox.PackEnd(_filterButton, false, false, 0);
+            var windowHBox = new HBox (false, 5);
+            windowHBox.PackEnd(aboutButton, false, false, 0);
+            windowHBox.PackEnd(filterButton, false, false, 0);
 
             _processNameEntry = new Entry();
             _processNameEntry.Changed += OnChanged;
@@ -106,8 +90,8 @@ namespace TestGtk.View
             _processIdEntry.Changed += OnChanged;
             _processIdEntry.TextInserted += OnlyNumerical;
 
-            
-            _FiltrationDirectionOptions = new[]
+            // String values for the combobox - filtration direction
+            _filtrationDirectionOptions = new[]
             {
                 ">",
                 "≥",
@@ -116,6 +100,7 @@ namespace TestGtk.View
                 "<"
             };
 
+            // String values for the combobox - memory usage units
             _memoryFiltrationDirectionUnits = new[]
             {
                 "B",
@@ -131,7 +116,7 @@ namespace TestGtk.View
             _memoryFiltrationEntry.Changed += OnChanged;
             _memoryFiltrationEntry.TextInserted += OnlyNumerical;
             
-            _memoryFiltrationDirectionComboBox = new ComboBox(_FiltrationDirectionOptions);
+            _memoryFiltrationDirectionComboBox = new ComboBox(_filtrationDirectionOptions);
             _memoryFiltrationDirectionComboBox.Changed += OnChanged;
             
             _memoryFiltrationUnitsComboBox = new ComboBox(_memoryFiltrationDirectionUnits);
@@ -149,15 +134,15 @@ namespace TestGtk.View
             _cpuFiltrationEntry.Changed += OnChanged;
             _cpuFiltrationEntry.TextInserted += OnlyNumerical;
             
-            _cpuFiltrationDirectionComboBox = new ComboBox(_FiltrationDirectionOptions);
+            _cpuFiltrationDirectionComboBox = new ComboBox(_filtrationDirectionOptions);
             _cpuFiltrationDirectionComboBox.Changed += OnChanged;
             
-            _cpuFiltrationLabel = new Label("%"); 
+            var cpuFiltrationLabel = new Label("%"); 
             
             _cpuFiltrationHbox = new HBox();
             _cpuFiltrationHbox.PackStart(_cpuFiltrationDirectionComboBox, false, false, 0);
             _cpuFiltrationHbox.PackStart(_cpuFiltrationEntry, false, false, 0);
-            _cpuFiltrationHbox.PackStart(_cpuFiltrationLabel, false, false, 0);
+            _cpuFiltrationHbox.PackStart(cpuFiltrationLabel, false, false, 0);
             
             
             _filtrationOptions = new[]
@@ -169,11 +154,11 @@ namespace TestGtk.View
                 "Filter by CPU usage",
             };
             
-            _filtrationCombo = new ComboBox(_filtrationOptions);
-            _filtrationCombo.Changed += ComboOnChanged;
+            var filtrationCombo = new ComboBox(_filtrationOptions);
+            filtrationCombo.Changed += ComboOnChanged;
             
             _filtrationHBox = new HBox(false, 5);
-            _filtrationHBox.PackStart(_filtrationCombo, false, false, 0);
+            _filtrationHBox.PackStart(filtrationCombo, false, false, 0);
             
 
             string[] columnLabels = {
@@ -188,45 +173,46 @@ namespace TestGtk.View
                 "Threads",
                 "Start Time"
             };
-            
-            
-            
-            _treeModelFilter = new TreeModelFilter(_store, null);
+
+
+            _treeModelFilter = new TreeModelFilter(_listStore, null);
             _treeModelFilter.VisibleFunc = Filter;
 
-            _treeModelSort = new TreeModelSort(_treeModelFilter);
-            _treeModelSort.SetSortFunc(0, WindowBuilderHelper.IdSortFunc);
-            _treeModelSort.SetSortFunc(1, WindowBuilderHelper.ProcessNameSortFunc);
-            _treeModelSort.SetSortFunc(2, WindowBuilderHelper.MemoryUsageSortFunc);
-            _treeModelSort.SetSortFunc(3, WindowBuilderHelper.PrioritySortFunc);
-            _treeModelSort.SetSortFunc(4, WindowBuilderHelper.UserCpuTimeSortFunc);
-            _treeModelSort.SetSortFunc(5, WindowBuilderHelper.PrivilegedCpuTimeSortFunc);
-            _treeModelSort.SetSortFunc(6, WindowBuilderHelper.TotalCpuTimeSortFunc);
-            _treeModelSort.SetSortFunc(7, WindowBuilderHelper.CpuUsageSortFunc);
-            _treeModelSort.SetSortFunc(8, WindowBuilderHelper.ThreadCountSortFunc);
-            _treeModelSort.SetSortFunc(9, WindowBuilderHelper.StartTimeSortFunc);
+            var treeModelSort = new TreeModelSort(_treeModelFilter);
+            treeModelSort.SetSortFunc(0, WindowBuilderHelper.IdSortFunc);
+            treeModelSort.SetSortFunc(1, WindowBuilderHelper.ProcessNameSortFunc);
+            treeModelSort.SetSortFunc(2, WindowBuilderHelper.MemoryUsageSortFunc);
+            treeModelSort.SetSortFunc(3, WindowBuilderHelper.PrioritySortFunc);
+            treeModelSort.SetSortFunc(4, WindowBuilderHelper.UserCpuTimeSortFunc);
+            treeModelSort.SetSortFunc(5, WindowBuilderHelper.PrivilegedCpuTimeSortFunc);
+            treeModelSort.SetSortFunc(6, WindowBuilderHelper.TotalCpuTimeSortFunc);
+            treeModelSort.SetSortFunc(7, WindowBuilderHelper.CpuUsageSortFunc);
+            treeModelSort.SetSortFunc(8, WindowBuilderHelper.ThreadCountSortFunc);
+            treeModelSort.SetSortFunc(9, WindowBuilderHelper.StartTimeSortFunc);
             
-            _treeView = new TreeView();
-            _treeView.Model = _treeModelSort;
-            _treeView.Selection.Mode = SelectionMode.Multiple;
-            _treeView.Selection.Changed += OnSelectionChanged;
+            var treeView = new TreeView();
+            treeView.Model = treeModelSort;
+            treeView.Selection.Mode = SelectionMode.Multiple;
+            treeView.Selection.Changed += OnSelectionChanged;
             
-            _cellRendererText = new CellRendererText();
-            _cellRendererText.Alignment = Pango.Alignment.Right;
-            _cellRendererText.Xalign = 0.5f;
+            // Create a CellRendererText responsible for proper rendering cell data
+            var cellRendererText = new CellRendererText();
+            cellRendererText.Alignment = Pango.Alignment.Right;
+            cellRendererText.Xalign = 0.5f;
             
+            // Load the _treeView with TreeViewColumns
             for (int i = 0; i < 10; i++)
             {
-                _treeViewColumn = new TreeViewColumn();
-                _treeViewColumn.Clickable = true;
-                _treeViewColumn.Resizable = true;
-                _treeViewColumn.Title = columnLabels[i];
-                _treeViewColumn.SortIndicator = true;
-                _treeViewColumn.Alignment = 0.5f;
-                _treeViewColumn.Expand = true;
-                _treeViewColumn.SortColumnId = i;
-                _treeViewColumn.PackStart(_cellRendererText, true);
-                _treeViewColumn.AddAttribute(_cellRendererText, "text", i);
+                var treeViewColumn = new TreeViewColumn();
+                treeViewColumn.Clickable = true;
+                treeViewColumn.Resizable = true;
+                treeViewColumn.Title = columnLabels[i];
+                treeViewColumn.SortIndicator = true;
+                treeViewColumn.Alignment = 0.5f;
+                treeViewColumn.Expand = true;
+                treeViewColumn.SortColumnId = i;
+                treeViewColumn.PackStart(cellRendererText, true);
+                treeViewColumn.AddAttribute(cellRendererText, "text", i);
 
                 switch (i)
                 {
@@ -235,74 +221,85 @@ namespace TestGtk.View
                     case 1:
                         break;
                     case 2:
-                        _treeViewColumn.SetCellDataFunc(_cellRendererText, WindowBuilderHelper.MemoryUsageFormatter);
+                        treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.MemoryUsageFormatter);
                         break;
                     case 3:
                         break;
                     case 4:
-                        _treeViewColumn.SetCellDataFunc(_cellRendererText, WindowBuilderHelper.UserCpuTimeFormatter);
+                        treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.UserCpuTimeFormatter);
                         break;
                     case 5:
-                        _treeViewColumn.SetCellDataFunc(_cellRendererText, WindowBuilderHelper.PrivilegedCpuTimeFormatter);
+                        treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.PrivilegedCpuTimeFormatter);
                         break;
                     case 6:
-                        _treeViewColumn.SetCellDataFunc(_cellRendererText, WindowBuilderHelper.TotalCpuTimeFormatter);
+                        treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.TotalCpuTimeFormatter);
                         break;
                     case 7:
-                        _treeViewColumn.SetCellDataFunc(_cellRendererText, WindowBuilderHelper.CpuUsageFormatter);
+                        treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.CpuUsageFormatter);
                         break;
                     case 8:
                         break;
                     case 9:
-                        _treeViewColumn.SetCellDataFunc(_cellRendererText, WindowBuilderHelper.StartTimeFormatter);
+                        treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.StartTimeFormatter);
                         break;
                 }
 
-                _treeView.AppendColumn(_treeViewColumn);
+                treeView.AppendColumn(treeViewColumn);
             }
             
-            _scrolledWindow = new ScrolledWindow();
-            _scrolledWindow.Add(_treeView);
+            // Create a scrollable window
+            var scrolledWindow = new ScrolledWindow();
+            scrolledWindow.Add(treeView);
 
-            _killButton = new Button("Kill process");
-            _killButton.Clicked += KillProcess;
+            var killButton = new Button("Kill process");
+            killButton.Clicked += KillProcess;
             
-            _windowVBox = new VBox (false, 5);
-            _windowVBox.PackStart (_windowHBox, false, false, 0);
-            _windowVBox.PackStart(_filtrationHBox, false, false, 0);
-            _windowVBox.PackStart(_scrolledWindow, true, true, 0);
-            _windowVBox.PackStart(_killButton, false, false, 0);
+            var windowVBox = new VBox (false, 5);
+            windowVBox.PackStart (windowHBox, false, false, 0);
+            windowVBox.PackStart(_filtrationHBox, false, false, 0);
+            windowVBox.PackStart(scrolledWindow, true, true, 0);
+            windowVBox.PackStart(killButton, false, false, 0);
             
-            
-            _window.Add(_windowVBox);
-            
+            _window.Add(windowVBox);
             
             // Create an instance of the object Updater
             _processGrabber = new ProcessGrabber();
+            // Add a callback executed when _processGrabber takes process data.
+            // The callback clears the _treeView content and loads new data
+            // Before clearing the _treeView content the callback saves the current scroll position
             _processGrabber.OnResult += (sender, processList) =>
             {
                 Application.Invoke(delegate
                 {
-                    _currentScrollPosition = _treeView.Vadjustment.Value;
+                    _currentScrollPosition = treeView.Vadjustment.Value;
                     StoreClear();
                     LoadStore(processList);
 
-                    _treeView.ShowAll();
+                    treeView.ShowAll();
                 });
             };
 
-            _treeView.Vadjustment.Changed += (sender, args) =>
+            // Add a callback executed after 'Changed' event raised after changing the position of the _treeView
+            // When the _treeView content is reloaded the previous scroll position is updated
+            treeView.Vadjustment.Changed += (sender, args) =>
             {
-                _treeView.Vadjustment.Value = _currentScrollPosition;
+                treeView.Vadjustment.Value = _currentScrollPosition;
             }; 
             
-            
-            _treeView.ShowAll();
+            treeView.ShowAll();
             _window.ShowAll();
+            
+            // Hide widgets related to process filtration
             _filtrationHBox.Hide();
+            
+            // Start the Timer process responsible for grabbing process data periodically 
             _processGrabber.Run();
         }
         
+        /// <summary>
+        /// Function that creates the dialog containing information about the program.
+        /// </summary>
+        /// <returns>AboutDialog instance</returns>
         private AboutDialog CreateAboutDialog()
         {
             AboutDialog aboutDialog = new AboutDialog();
@@ -336,10 +333,16 @@ namespace TestGtk.View
             return aboutDialog;
         }
 
+        /// <summary>
+        /// Callback executed after Changed event raised by _filtrationCombo
+        /// </summary>
+        /// <param name="sender">_filtrationCombo object</param>
+        /// <param name="args">Event arguments</param>
         private void ComboOnChanged(object sender, EventArgs args)
         {
             ComboBox combo = (ComboBox) sender;
 
+            // combo.Active returns the index of the actually selected item
             switch (_filtrationOptions[combo.Active])
             {
                 case "All processes":
@@ -364,6 +367,10 @@ namespace TestGtk.View
             }
         }
 
+        /// <summary>
+        /// Hide all filtration entry widgets except the specified one
+        /// </summary>
+        /// <param name="widget">The widget to be shown</param>
         private void ShowFilterWidgets(Widget widget)
         {
             HideAllEntryWidgets();
@@ -371,6 +378,11 @@ namespace TestGtk.View
             _filtrationHBox.ShowAll();
         }
         
+        /// <summary>
+        /// Callback method executed on TextInserted event by Entry widget to force only digits
+        /// </summary>
+        /// <param name="sender">Entry widget</param>
+        /// <param name="args">Text inserted arguments</param>
         private void OnlyNumerical(object sender, TextInsertedArgs args)
         {
             Entry entry = (Entry) sender;
@@ -387,6 +399,9 @@ namespace TestGtk.View
             }
         }
 
+        /// <summary>
+        /// Hide all Entry widgets and clear their input values.
+        /// </summary>
         private void HideAllEntryWidgets()
         {
             _processNameEntry.Text = "";
@@ -394,6 +409,7 @@ namespace TestGtk.View
             _memoryFiltrationEntry.Text = "";
             _cpuFiltrationEntry.Text = "";
             
+            // Loop through all _filtrationHBox children and remove all of them but 'GtkComboBox'
             _filtrationHBox.Foreach(widget =>
             {
                 if (widget.Name != "GtkComboBox")
@@ -403,10 +419,17 @@ namespace TestGtk.View
             });
         }
         
+        /// <summary>
+        /// Callback executed after changing a value within any filtration Entry field. 
+        /// </summary>
+        /// <param name="sender">Widget that call the 'Changed' event</param>
+        /// <param name="args">Event arguments</param>
         private void OnChanged(object sender, EventArgs args)
         {
+            // _columnFilter - id of the column by which the filtration will be performed
             switch (_columnFilter)
             {
+                // Assign a filtration text to the global variable _textToFilter
                 case 0:
                     _textToFilter = _processIdEntry.Text;
                     break;
@@ -430,9 +453,16 @@ namespace TestGtk.View
                     break;
             }
             
+            // Execute filtration callback
             _treeModelFilter.Refilter();
         }
 
+        /// <summary>
+        /// Converts formatted memory size to bytes.
+        /// </summary>
+        /// <param name="size">Memory usage expressed in the specified unit. The size is provided as a string.</param>
+        /// <param name="unit">Unit of the memory size.</param>
+        /// <returns>Double - raw memory usage in bytes</returns>
         private double MemSizeToRaw(string size, string unit)
         {
             string[] units = { "TB", "GB", "MB", "KB", "B" };
@@ -449,6 +479,12 @@ namespace TestGtk.View
             return sizeDouble;
         }
 
+        /// <summary>
+        /// Method executed during filtration (after executing the _treeModelFilter.Refilter() method)
+        /// </summary>
+        /// <param name="model">TreeModel object</param>
+        /// <param name="iter">TreeIter</param>
+        /// <returns>'True' if the column value should be kept or 'false' if the column value should hidden</returns>
         private bool Filter(ITreeModel model, TreeIter iter)
         {
             try
@@ -458,20 +494,21 @@ namespace TestGtk.View
                 if (_textToFilter == "" || columnValue == "")
                     return true;
 
+                // Filtration rule if the text to be filtered ends with percent character (CPU usage) 
                 if (_textToFilter.EndsWith('%'))
                 {
-                    string[] _textToFilterSplitted = _textToFilter.Split(" ");
-                    double userInput = Convert.ToDouble(_textToFilterSplitted[0]);
+                    string[] textToFilterSplitted = _textToFilter.Split(" ");
+                    double userInput = Convert.ToDouble(textToFilterSplitted[0]);
                     double cpuUsage = Convert.ToDouble(columnValue);
                     
-                    switch (_FiltrationDirectionOptions[_cpuFiltrationDirectionComboBox.Active])
+                    switch (_filtrationDirectionOptions[_cpuFiltrationDirectionComboBox.Active])
                     {
                         case ">":
                             return cpuUsage > userInput;
                         case "≥":
                             return cpuUsage >= userInput;
                         case "=":
-                            return cpuUsage == userInput;
+                            return Math.Abs(cpuUsage - userInput) < 0.1;
                         case "≤":
                             return cpuUsage <= userInput;
                         case "<":
@@ -481,23 +518,24 @@ namespace TestGtk.View
                     }
                 }
                 
+                // Filtration rule if the text to be filtered ends with 'B' character (memory usage)
                 if (_textToFilter.EndsWith('B'))
                 {
-                    string[] _textToFilterSplitted = _textToFilter.Split(" ");
-                    string memSize = _textToFilterSplitted[0];
-                    string memUnit = _textToFilterSplitted[1];
+                    string[] textToFilterSplitted = _textToFilter.Split(" ");
+                    string memSize = textToFilterSplitted[0];
+                    string memUnit = textToFilterSplitted[1];
 
                     double memoryUsage = Convert.ToDouble(columnValue);
                 
 
-                    switch (_FiltrationDirectionOptions[_memoryFiltrationDirectionComboBox.Active])
+                    switch (_filtrationDirectionOptions[_memoryFiltrationDirectionComboBox.Active])
                     {
                         case ">":
                             return memoryUsage > MemSizeToRaw(memSize, memUnit);
                         case "≥":
                             return memoryUsage >= MemSizeToRaw(memSize, memUnit);
                         case "=":
-                            return memoryUsage == MemSizeToRaw(memSize, memUnit);
+                            return Math.Abs(memoryUsage - MemSizeToRaw(memSize, memUnit)) < 100;
                         case "≤":
                             return memoryUsage <= MemSizeToRaw(memSize, memUnit);
                         case "<":
@@ -507,7 +545,8 @@ namespace TestGtk.View
                     }
                 }
 
-                if (columnValue.IndexOf(_textToFilter, StringComparison.CurrentCultureIgnoreCase) > -1)
+                // Filtration rule if the text to be filtered is a simple string (PID or process name)
+                if (columnValue != null && columnValue.IndexOf(_textToFilter, StringComparison.CurrentCultureIgnoreCase) > -1)
                     return true;
                 
                 return false;
@@ -518,20 +557,93 @@ namespace TestGtk.View
             }
         }
 
+        /// <summary>
+        /// Clear _listStore rows by filling columns with empty strings.
+        /// </summary>
         private void StoreClear()
         {
             TreeIter iter;
-            _store.GetIterFirst(out iter);
-            for (int i = 0; i < _store.IterNChildren(); i++)
+            _listStore.GetIterFirst(out iter);
+            
+            for (int i = 0; i < _listStore.IterNChildren(); i++)
             {
-                _store.SetValues(iter, "", "", "", "", "", "", "", "", "", "");
+                _listStore.SetValues(iter, "", "", "", "", "", "", "", "", "", "");
 
-                _store.IterNext(ref iter);
+                _listStore.IterNext(ref iter);
+            }
+        }
+        
+        /// <summary>
+        /// Load process data into _listStore.
+        /// </summary>
+        /// <param name="element">List of ProcessMod objects containing data about all processes</param>
+        private void LoadStore(List<ProcessMod> element)
+        {
+            // Index of _listStore row
+            int elementIndex = 0;
+            
+            TreeIter iter;
+            _listStore.GetIterFirst(out iter);
+            
+            for (int i = 0; i < _listStore.IterNChildren(); i++)
+            {
+                // If the current row index is less than the total number of processes
+                // load process data into the current _listStore row
+                if (element.Count > i)
+                {
+                    _listStore.SetValues(iter,
+                        element[i].Id.ToString(CultureInfo.InvariantCulture),
+                        element[i].ProcessName,
+                        element[i].WorkingSet64.ToString(),
+                        element[i].PriorityClass,
+                        element[i].UserProcessorTime.ToString(CultureInfo.InvariantCulture),
+                        element[i].PrivilegedProcessorTime.ToString(CultureInfo.InvariantCulture),
+                        element[i].TotalProcessorTime.ToString(CultureInfo.InvariantCulture),
+                        element[i].CpuUsage.ToString(CultureInfo.InvariantCulture),
+                        element[i].ThreadCount.ToString(),
+                        element[i].StartTime.ToString()
+                    );
+                    _listStore.IterNext(ref iter);
+                }
+                // If the number of rows is higher than the total number of processes
+                // remove empty _listStore row
+                else
+                {
+                    _listStore.Remove(ref iter);
+                }
+                
+                elementIndex++;
+            }
+
+            // If the total process number is higher than the number of rows in _listStore
+            // add new rows and fill them with process data
+            if (element.Count > elementIndex)
+            {
+                for (int i = elementIndex; i < element.Count; i++)
+                {
+                    _listStore.AppendValues(element[i].Id.ToString(CultureInfo.InvariantCulture),
+                        element[i].ProcessName,
+                        element[i].WorkingSet64.ToString(),
+                        element[i].PriorityClass,
+                        element[i].UserProcessorTime.ToString(CultureInfo.InvariantCulture),
+                        element[i].PrivilegedProcessorTime.ToString(CultureInfo.InvariantCulture),
+                        element[i].TotalProcessorTime.ToString(CultureInfo.InvariantCulture),
+                        element[i].CpuUsage.ToString(CultureInfo.InvariantCulture),
+                        element[i].ThreadCount.ToString(),
+                        element[i].StartTime.ToString());
+                }
             }
         }
 
+        /// <summary>
+        /// A method called on click event of 'Kill process' button.
+        /// Kill all processes which IDs are stored in the list _processIdToKill.
+        /// </summary>
+        /// <param name="o">Reference to the button object</param>
+        /// <param name="args">Event arguments</param>
         private void KillProcess(object o, EventArgs args)
         {
+            // KillDialog - a dialog that pops up to confirm process assassination
             using (KillDialog killDialog = new KillDialog(_window, DialogFlags.Modal, MessageType.Warning, ButtonsType.YesNo, null))
             {
                 int processesToKillCount = _processIdToKill.Count;
@@ -552,20 +664,26 @@ namespace TestGtk.View
                         $"Are you sure you want to end the {processesToKillCount.ToString()} selected processes?";
                 }
 
+                // Add a callback to click event on any button within KillDialog
                 killDialog.Response += (o1, responseArgs) =>
                 {
                     switch (responseArgs.ResponseId)
                     {
+                        // Click on YES button
                         case ResponseType.Yes:
                             foreach (var id in _processIdToKill)
                             {
                                 Process process = Process.GetProcessById(id);
-                                Console.WriteLine($"{id.ToString()} killed");
                                 process.Kill();
+                                
+                                Console.WriteLine($"{id.ToString()} killed");
+                                
+                                // Cleaning up
                                 process.Dispose();
                             }
 
                             break;
+                        // Click on NO button
                         case ResponseType.No:
                             Console.WriteLine("Abort killing.");
                             break;
@@ -576,69 +694,34 @@ namespace TestGtk.View
             }
         }
 
-        private void LoadStore(List<ProcessMod> element)
-        {
-            int elementIndex = 0;
-            TreeIter iter;
-            _store.GetIterFirst(out iter);
-            for (int i = 0; i < _store.IterNChildren(); i++)
-            {
-                if (element.Count - 0 > i)
-                {
-                    _store.SetValues(iter,
-                        element[i].Id.ToString(),
-                        element[i].ProcessName,
-                        element[i].WorkingSet64.ToString(),
-                        element[i].PriorityClass,
-                        element[i].UserProcessorTime.ToString(),
-                        element[i].PrivilegedProcessorTime.ToString(),
-                        element[i].TotalProcessorTime.ToString(),
-                        element[i].CpuUsage.ToString(),
-                        element[i].ThreadCount.ToString(),
-                        element[i].StartTime.ToString()
-                    );
-                    _store.IterNext(ref iter);
-                }
-                else
-                {
-                    _store.Remove(ref iter);
-                }
-                
-                elementIndex++;
-            }
-
-            if (element.Count > elementIndex)
-            {
-                for (int i = elementIndex; i < element.Count; i++)
-                {
-                    _store.AppendValues(element[i].Id.ToString(),
-                        element[i].ProcessName,
-                        element[i].WorkingSet64.ToString(),
-                        element[i].PriorityClass,
-                        element[i].UserProcessorTime.ToString(),
-                        element[i].PrivilegedProcessorTime.ToString(),
-                        element[i].TotalProcessorTime.ToString(),
-                        element[i].CpuUsage.ToString(),
-                        element[i].ThreadCount.ToString(),
-                        element[i].StartTime.ToString());
-                }
-            }
-        }
-
+        /// <summary>
+        /// Callback method executed after closing the main window.
+        /// </summary>
+        /// <param name="obj">Window object</param>
+        /// <param name="args">Delete event arguments</param>
         static void OnWindowClose (object obj, DeleteEventArgs args)
         {
+            // Stop Timer process responsible for grabbing process data periodically 
             _processGrabber.Stop();
+            
             Application.Quit();
         }
         
+        /// <summary>
+        /// Callback method executed when row/rows is/are selected
+        /// </summary>
+        /// <param name="o">TreeSelection object</param>
+        /// <param name="args">Event arguments</param>
         void OnSelectionChanged(object o, EventArgs args)
         {
             TreeSelection selection = (TreeSelection)o;
+            
             ITreeModel filtered;
             TreePath[] selectedRows = selection.GetSelectedRows(out filtered);
-            
 
+            // Clear a list storing PID to kill
             _processIdToKill.Clear();
+            
             TreeIter iter;
             if (selectedRows.Length > 0)
             {
@@ -648,6 +731,7 @@ namespace TestGtk.View
 
                     int id;
                     int.TryParse(filtered.GetValue(iter, 0).ToString(), out id);
+                    
                     if (id != 0)
                     {
                         _processIdToKill.Add(id);
@@ -660,6 +744,9 @@ namespace TestGtk.View
             }
         }
 
+        /// <summary>
+        /// Method to start application main loop
+        /// </summary>
         public void Run()
         {
             Application.Run();

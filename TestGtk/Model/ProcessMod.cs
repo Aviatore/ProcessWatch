@@ -151,7 +151,7 @@ namespace TestGtk.Model
         /// <returns>Formatted time suffixed with 'ms'</returns>
         public static string FormatTimeMs(double size)
         {
-            return $"{size.ToString()} ms";
+            return $"{size.ToString(CultureInfo.InvariantCulture)} ms";
         }
     }
 }

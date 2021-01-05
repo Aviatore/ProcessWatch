@@ -158,7 +158,7 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
                 
-                return String.Compare(val1, val2);
+                return String.CompareOrdinal(val1, val2);
             }
             catch (NullReferenceException e)
             {
@@ -196,7 +196,7 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
                 
-                return String.Compare(val1, val2);
+                return String.CompareOrdinal(val1, val2);
             }
             catch (NullReferenceException e)
             {
