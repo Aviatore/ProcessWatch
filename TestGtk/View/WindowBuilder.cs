@@ -568,7 +568,7 @@ namespace TestGtk.View
             for (int i = 0; i < _listStore.IterNChildren(); i++)
             {
                 _listStore.SetValues(iter, "", "", "", "", "", "", "", "", "", "");
-
+                
                 _listStore.IterNext(ref iter);
             }
         }

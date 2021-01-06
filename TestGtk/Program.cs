@@ -1,4 +1,4 @@
-﻿//using Gtk;
+﻿using Gtk;
 
 
 using TestGtk.View;
@@ -10,7 +10,8 @@ namespace TestGtk
         static void Main(string[] args)
         {
             WindowBuilder windowBuilder = new WindowBuilder();
-            windowBuilder.Run();
+            //windowBuilder.Run();
+            Application.Run();
         }
     }
 }

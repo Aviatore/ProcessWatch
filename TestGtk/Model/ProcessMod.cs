@@ -18,7 +18,9 @@ namespace TestGtk.Model
         
         public long WorkingSet64 { get;  set; }
         public double TotalProcessorTime { get;  set; }
-        public long StartTime { get; set; } 
+        public long StartTime { get; set; }
+        private static Process[] processes;
+        private static DateTime dateTime;
         
         public ProcessMod()
         {
@@ -31,7 +33,7 @@ namespace TestGtk.Model
         /// <returns>An array of ProcessMod objects</returns>
         public static ProcessMod[] GetProcesses()
         {
-            Process[] processes = Process.GetProcesses();
+            processes = Process.GetProcesses();
             
             // The list is initialized with the specific size to solve memory allocation issues
             List<ProcessMod> proc = new List<ProcessMod>(processes.Length);
@@ -59,7 +61,7 @@ namespace TestGtk.Model
             // Cleaning up
             foreach (var process in processes)
             {
-                process.Dispose();
+                process?.Dispose();
             }
             
             return proc.ToArray();
@@ -100,6 +102,7 @@ namespace TestGtk.Model
             tmp.ThreadCount = proc.Threads.Count;
             tmp.StartTime = proc.StartTime.Ticks;
             //Console.WriteLine(tmp.CpuUsage);
+            //proc.Dispose();
             return tmp;
         }
 
@@ -139,7 +142,7 @@ namespace TestGtk.Model
         /// <returns>Properly formatted time</returns>
         public static string FormatTime(long ticks)
         {
-            DateTime dateTime = new DateTime(ticks);
+            dateTime = new DateTime(ticks);
 
             return dateTime.ToString("G", CultureInfo.CreateSpecificCulture("pl-PL"));
         }
