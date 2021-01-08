@@ -35,6 +35,7 @@ namespace TestGtk.View
         private readonly string[] _filtrationOptions;
         private readonly string[] _memoryFiltrationDirectionUnits;
         private string _textToFilter;
+        private string _toolTipCurrentRowId;
         private readonly TreeModelFilter _treeModelFilter;
         private readonly Window _window;
 
@@ -194,7 +195,12 @@ namespace TestGtk.View
             treeView.Model = treeModelSort;
             treeView.Selection.Mode = SelectionMode.Multiple;
             treeView.Selection.Changed += OnSelectionChanged;
+            treeView.TooltipColumn = 1;
             
+            // Create a scrollable window
+            var scrolledWindow = new ScrolledWindow();
+            scrolledWindow.Add(treeView);
+
             // Create a CellRendererText responsible for proper rendering cell data
             var cellRendererText = new CellRendererText();
             cellRendererText.Alignment = Pango.Alignment.Right;
@@ -219,6 +225,8 @@ namespace TestGtk.View
                     case 0:
                         break;
                     case 1:
+                        _window.GetSize(out int width, out int height);
+                        treeViewColumn.MaxWidth = Math.Abs(width / 2);
                         break;
                     case 2:
                         treeViewColumn.SetCellDataFunc(cellRendererText, WindowBuilderHelper.MemoryUsageFormatter);
@@ -246,10 +254,6 @@ namespace TestGtk.View
 
                 treeView.AppendColumn(treeViewColumn);
             }
-            
-            // Create a scrollable window
-            var scrolledWindow = new ScrolledWindow();
-            scrolledWindow.Add(treeView);
 
             var killButton = new Button("Kill process");
             killButton.Clicked += KillProcess;
@@ -284,16 +288,16 @@ namespace TestGtk.View
             treeView.Vadjustment.Changed += (sender, args) =>
             {
                 treeView.Vadjustment.Value = _currentScrollPosition;
-            }; 
+            };
+
+            // Start the Timer process responsible for grabbing process data periodically 
+            _processGrabber.Run();
             
             treeView.ShowAll();
             _window.ShowAll();
             
             // Hide widgets related to process filtration
             _filtrationHBox.Hide();
-            
-            // Start the Timer process responsible for grabbing process data periodically 
-            _processGrabber.Run();
         }
         
         /// <summary>

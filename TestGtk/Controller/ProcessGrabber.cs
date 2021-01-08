@@ -23,6 +23,7 @@ namespace TestGtk.Controller
         {
             _thread = new Thread(new ThreadStart(GetDataExecute));
             _thread.Start();
+            _thread.Join();
             
             SetTimer();
         }
