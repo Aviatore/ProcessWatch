@@ -314,7 +314,7 @@ namespace TestGtk.View
                 "Wojciech Wesołowski",
                 "Marek Krzysztofiak"
             };
-            aboutDialog.Copyright = "Copyright \xa9 2021 Codecool";
+            aboutDialog.Copyright = "Copyright \xa9 2021 Wojciech Wesołowski";
             aboutDialog.Version = "v.1.0";
             aboutDialog.ProgramName = "Process Watch";
             aboutDialog.Response += (o, args) =>
