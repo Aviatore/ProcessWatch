@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestGtk", "TestGtk\TestGtk.csproj", "{66C9547B-73CE-4702-82A3-AF404BE3DDAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessWatch", "ProcessWatch\ProcessWatch.csproj", "{66C9547B-73CE-4702-82A3-AF404BE3DDAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

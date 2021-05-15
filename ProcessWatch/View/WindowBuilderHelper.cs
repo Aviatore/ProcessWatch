@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Gtk;
 using TestGtk.Model;
 
@@ -13,7 +14,7 @@ namespace TestGtk.View
             try
             {
                 string data = model.GetValue(iter, 2).ToString();
-                double dataDouble = Convert.ToDouble(data);
+                double dataDouble = Convert.ToDouble(data, CultureInfo.InvariantCulture);
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatMemSize(dataDouble);
@@ -33,7 +34,7 @@ namespace TestGtk.View
             try
             {
                 string data = model.GetValue(iter, 4).ToString();
-                long dataLong = Convert.ToInt64(data);
+                long dataLong = Convert.ToInt64(data, CultureInfo.InvariantCulture);
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatTimeMs(dataLong);
@@ -53,7 +54,7 @@ namespace TestGtk.View
             try
             {
                 string data = model.GetValue(iter, 5).ToString();
-                long dataLong = Convert.ToInt64(data);
+                long dataLong = Convert.ToInt64(data, CultureInfo.InvariantCulture);
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatTimeMs(dataLong);
@@ -73,7 +74,7 @@ namespace TestGtk.View
             try
             {
                 string data = model.GetValue(iter, 6).ToString();
-                long dataLong = Convert.ToInt64(data);
+                long dataLong = Convert.ToInt64(data, CultureInfo.InvariantCulture);
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatTimeMs(dataLong);
@@ -90,10 +91,11 @@ namespace TestGtk.View
         
         public static void CpuUsageFormatter(TreeViewColumn column, CellRenderer cell, ITreeModel model, TreeIter iter)
         {
+            string data = "";
             try
             {
-                string data = model.GetValue(iter, 7).ToString();
-                double dataDouble = Convert.ToDouble(data);
+                data = model.GetValue(iter, 7).ToString();
+                double dataDouble = Convert.ToDouble(data, CultureInfo.InvariantCulture);
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatCpuUsage(dataDouble);
@@ -101,6 +103,7 @@ namespace TestGtk.View
             }
             catch (Exception e)
             {
+                Console.WriteLine($"{e.Message} : {data}");
                 if (e is NullReferenceException || e is FormatException)
                 {
                     ((CellRendererText) cell).Text = "";
@@ -113,7 +116,7 @@ namespace TestGtk.View
             try
             {
                 string data = model.GetValue(iter, 9).ToString();
-                long dataLong = Convert.ToInt64(data);
+                long dataLong = Convert.ToInt64(data, CultureInfo.InvariantCulture);
                 if (data != "")
                 {
                     ((CellRendererText) cell).Text = ProcessMod.FormatTime(dataLong);
@@ -138,8 +141,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                int s1 = Convert.ToInt32(val1);
-                int s2 = Convert.ToInt32(val2);
+                int s1 = Convert.ToInt32(val1, CultureInfo.InvariantCulture);
+                int s2 = Convert.ToInt32(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -176,8 +179,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                double s1 = Convert.ToDouble(val1);
-                double s2 = Convert.ToDouble(val2);
+                double s1 = Convert.ToDouble(val1, CultureInfo.InvariantCulture);
+                double s2 = Convert.ToDouble(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -214,8 +217,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                int s1 = Convert.ToInt32(val1);
-                int s2 = Convert.ToInt32(val2);
+                int s1 = Convert.ToInt32(val1, CultureInfo.InvariantCulture);
+                int s2 = Convert.ToInt32(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -234,8 +237,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                int s1 = Convert.ToInt32(val1);
-                int s2 = Convert.ToInt32(val2);
+                int s1 = Convert.ToInt32(val1, CultureInfo.InvariantCulture);
+                int s2 = Convert.ToInt32(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -254,8 +257,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                int s1 = Convert.ToInt32(val1);
-                int s2 = Convert.ToInt32(val2);
+                int s1 = Convert.ToInt32(val1, CultureInfo.InvariantCulture);
+                int s2 = Convert.ToInt32(val2, CultureInfo.InvariantCulture);
 
                 return s1.CompareTo(s2);
             }
@@ -275,8 +278,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                double s1 = Convert.ToDouble(val1);
-                double s2 = Convert.ToDouble(val2);
+                double s1 = Convert.ToDouble(val1, CultureInfo.InvariantCulture);
+                double s2 = Convert.ToDouble(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -295,8 +298,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                int s1 = Convert.ToInt32(val1);
-                int s2 = Convert.ToInt32(val2);
+                int s1 = Convert.ToInt32(val1, CultureInfo.InvariantCulture);
+                int s2 = Convert.ToInt32(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)
@@ -315,8 +318,8 @@ namespace TestGtk.View
                 if (val1 == "" || val2 == "")
                     return 1;
 
-                long s1 = Convert.ToInt64(val1);
-                long s2 = Convert.ToInt64(val2);
+                long s1 = Convert.ToInt64(val1, CultureInfo.InvariantCulture);
+                long s2 = Convert.ToInt64(val2, CultureInfo.InvariantCulture);
                 return s1.CompareTo(s2);
             }
             catch (NullReferenceException e)

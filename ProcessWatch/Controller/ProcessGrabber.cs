@@ -44,7 +44,7 @@ namespace TestGtk.Controller
         
         private void GetData(object source=null, ElapsedEventArgs args=null)
         {
-            Console.WriteLine("tick");
+            //Console.WriteLine("tick");
             //GetDataExecute();
             ProcessMod[] processes = ProcessMod.GetProcesses();
 
