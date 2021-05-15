@@ -22,25 +22,25 @@ So your team decided to implement your own graphical but versatile task manager.
 
 1. Gather the current processes from the computer and display in the application.
     - Display as much information about the running processes as possible
-        - If one property of a process can't be retrieved then still display the process and note that the information is not available for the given attribute
+    - If one property of a process can't be retrieved then still display the process and note that the information is not available for the given attribute
 
-        2. Add a functionality to refresh list of active processes.
-            - When a certain command or key is inputted to the console, the list of active processes shall be re-requested and displayed
+2. Add a functionality to refresh list of active processes.
+    - When a certain command or key is inputted to the console, the list of active processes shall be re-requested and displayed
 
-            3. Provide some way for the user to filter the displayed processes.
-                - Filter the processes of a given user
-                    - Display all the processes that have the same parent process
+3. Provide some way for the user to filter the displayed processes.
+    - Filter the processes of a given user
+    - Display all the processes that have the same parent process
 
-                    4. Provide some way for the user to kill processes.
-                        - Provide a way to select some of the processes
-                            - Provide a way to select all of the **displayed** processes
-                                - Provide a way to terminate selected processes
+4. Provide some way for the user to kill processes.
+    - Provide a way to select some of the processes
+    - Provide a way to select all of the **displayed** processes
+    - Provide a way to terminate selected processes
 
-                                5. Provide contextual help / usage information for the user.
-                                    - Have some kind of instructions on how the application controls work 
+5. Provide contextual help / usage information for the user.
+    - Have some kind of instructions on how the application controls work 
 
-                                    6. Add an "About" section displaying general description about the application.
-                                        - Add a feature that gives a brief description of the application
+6. Add an "About" section displaying general description about the application.
+    - Add a feature that gives a brief description of the application
 
 ## General requirements
 
